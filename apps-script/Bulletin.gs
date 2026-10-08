@@ -260,7 +260,7 @@ function autoPublishBulletin() {
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
-  if (!p.api) return movedPage_();
+  if (!p.api) return movedPage_(p);
   return json_(function () {
     var ss = ss_();
     ensureSetup_(ss);
@@ -305,8 +305,10 @@ function json_(fn) {
 }
 
 /** Anyone opening the old script.google.com link gets pointed at the new site. */
-function movedPage_() {
-  var site = siteUrl_(readSettings_());
+function movedPage_(p) {
+  var settings = readSettings_();
+  // Old emailed admin links (…/exec?page=admin&key=…) still work: they point to the new admin page.
+  var site = p.page === 'admin' && isAdmin_(p.key) ? adminUrl_(settings) : siteUrl_(settings);
   return HtmlService.createHtmlOutput('<p style="font:18px/1.5 sans-serif;padding:24px">' +
     'The ward bulletin has moved: <a target="_top" href="' + esc_(site) + '">' + esc_(site) + '</a></p>')
     .setTitle('Ward bulletin').addMetaTag('viewport', 'width=device-width, initial-scale=1');

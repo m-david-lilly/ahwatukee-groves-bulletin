@@ -1,98 +1,74 @@
-# Ahwatukee Groves Ward Bulletin: setup and weekly use
+# Ahwatukee Groves Ward Bulletin
 
-One Google Apps Script project, attached to the **Sacrament Meeting 2026 - Official** sheet, handles:
+One system for the electronic and printed sacrament meeting bulletin, driven by the **Sacrament Meeting 2026 - Official** spreadsheet.
 
 | Piece | Where it lives |
 |---|---|
-| Agenda | The existing **Current Week** tab (nothing changes in how you plan the program) |
-| Announcement submissions | A phone-friendly form → **Bulletin Announcements** tab, as *Pending* |
-| Approval | The **admin page** (private link), or the Status column on that tab |
-| Electronic bulletin | The web app's main page, for phones and tablets. Shared through a short link. |
-| Printed bulletin | Google Doc + PDF, Letter landscape: agenda on the left, announcements on the right |
+| Agenda | The existing **Current Week** tab. Nothing changes in how you plan the program. |
+| Website (bulletin, submit form, admin page) | GitHub Pages, from the `docs/` folder. No Google banner. |
+| Data and printing | Apps Script attached to the spreadsheet (`apps-script/`). It answers the website with JSON and builds the Doc/PDF. |
+| Announcements | **Bulletin Announcements** tab. Submissions arrive as *Pending*. |
+| Settings | **Bulletin Settings** tab (ward name, times, deadline, links…) |
 
-Hosting is the Apps Script web app itself: free and run by Google, with nothing else to maintain.
-
-## The four links
+## Links
 
 | Link | Who uses it |
 |---|---|
-| `…/exec` (via the short link) | Everyone: the electronic bulletin |
-| `…/exec?page=submit` | Everyone: submit an announcement (also a button on the bulletin) |
-| `…/exec?page=admin&key=…` | **Only you** (and anyone you choose): approve, edit, publish. Get it from **Bulletin → Admin page**. |
-| `…/exec?preview=1` | You: see the live sheet before publishing |
+| **tinyurl.com/agw-bulletin** → <https://m-david-lilly.github.io/ahwatukee-groves-bulletin/> | Everyone: the electronic bulletin, with Download PDF and Submit buttons |
+| `…/submit.html` | Everyone: submit an announcement |
+| `…/admin.html#key=…` | **Only you** (and anyone you choose): approve, edit, publish. It's in your setup email, or under **Bulletin → Admin page** in the sheet. |
+| `…/?preview=1` | You: see the live sheet before publishing |
 
-## One-time setup
+## Weekly routine
 
-The code goes up with `clasp`, Google's command-line tool for Apps Script. Run these from the `ward-bulletin` folder.
+1. Ward members submit announcements. You get an email with a link to the admin page.
+2. On the admin page, **Approve** or **Reject** each item under *Needs review*. Use **Edit** to fix typos, set dates, or give it an **Order** (1, 2, 3…) to pin it to the top.
+3. When **Current Week** is final, tap **Publish bulletin**. The website updates, and a fresh PDF is made.
+4. Tap **PDF** to print, or **Edit Doc** for a last-minute tweak first.
 
-1. Turn on the Apps Script API for your Google account: <https://script.google.com/home/usersettings>
-2. Sign in to `clasp` (a browser window opens to approve):
+Optional: **Bulletin → Setup → Auto-publish every Saturday evening** (6 PM Arizona time). It emails you the PDF link.
 
-   ```bash
-   clasp login
-   ```
+**Which Sundays an announcement appears:** from *Start running* through *Stop after*. If *Stop after* is blank, it runs through the *Event date*. If both are blank, it runs until you **Archive** it. Items whose event date has passed drop off automatically.
 
-3. Create a script attached to the spreadsheet, then upload the code:
+**Standing items** (temple schedule, ward council contacts): add a row in the sheet with Status `Approved`, a high Order number, and no dates.
 
-   ```bash
-   clasp create-script --title "Ward Bulletin" --parentId 1Lw_5aQDKWZgMUil8viD8zaNBNLMGk0tIwDDPxTIHHDA --rootDir apps-script
-   ```
+## Good to know
 
-   ```bash
-   clasp push --force
-   ```
+- **The admin link is the password.** Anyone with it can approve and publish. The key sits after `#` in the link, so it's never sent to GitHub. If it gets around, use **Bulletin → Setup → Reset admin link**; the old one stops working immediately.
+- **The website shows the last *published* bulletin.** Phones also keep the last bulletin they loaded, so it still opens on weak chapel Wi-Fi.
+- **The PDF is public** ("anyone with the link can view") so the Download button works. The editable Doc stays private.
+- **Page overflow:** on a busy week, lower **Print Font Size** to 10, or edit the Doc by hand.
+- **Prayers:** a blank or N/A Invocation or Benediction shows **By Invitation**.
+- **Hymn links** open the hymn in Gospel Library. New hymns released later need adding to `apps-script/HymnLinks.gs`.
+- **Fast Sunday** is detected automatically. Speakers become *Bearing of Testimonies*, and the intermediate hymn is dropped.
 
-4. Reload the spreadsheet and approve the script's permissions (Sheets, Docs, Drive, email, fetching the QR-code image). Google will say the app isn't verified; choose **Advanced → Go to Ward Bulletin**. The first time anyone opens the web app, it creates the **Bulletin Settings** and **Bulletin Announcements** tabs and emails you the private admin link. **Bulletin → Setup → Create / repair bulletin tabs** does the same thing by hand.
-5. Create the web app (anyone can view, runs as you):
+## Changing the code
 
-   ```bash
-   clasp create-deployment --description "Ward bulletin"
-   ```
+**Website** (`docs/`): commit and push. GitHub Pages updates in about a minute.
 
-   Paste the URL it prints (ends in `/exec`) into **Web App URL** on the **Bulletin Settings** tab.
-6. Make the short link (e.g. `tinyurl.com/ahwatukee-groves-bulletin`) pointing at the `/exec` URL. Put it in **Print Link**.
-7. Fill in the rest of **Bulletin Settings** (Meeting Time, Presiding, …). Then run **Bulletin → Publish this week's bulletin**.
-8. **Bulletin → Admin page** shows your private admin link. Bookmark it on your phone.
-9. Optional: **Bulletin → Setup → Auto-publish every Saturday evening** (6 PM Arizona time).
+```bash
+git push
+```
 
-### Updating the code later
-
-Push the new code, then point the *same* deployment at it, so the `/exec` URL and short link never change:
+**Apps Script** (`apps-script/`): push the code, then update the *same* deployment, so the data address in `docs/api.js` never changes.
 
 ```bash
 clasp push --force
 ```
 
 ```bash
-clasp list-deployments
+clasp update-deployment AKfycbw-Cb7mE0-v5aSE7MFxccmJ_NhMenz6HFykGV3Xo3IYLNhfteh_e4BfXQj3Sim6dANk
 ```
 
-```bash
-clasp update-deployment <deployment-id-from-the-list> --description "update"
-```
+Adding a setting? Add it to `SETTING_DEFAULTS` and bump `SETUP_VERSION`. The next website visit adds it to the Settings tab.
 
-## Weekly routine
+**Tests:** `node test/run.js` checks the agenda and announcement logic. It also builds `preview/`, a copy of the site that runs against a fake server.
 
-1. Ward members submit announcements. You get an email with a link straight to the admin page.
-2. On the admin page, **Approve** or **Reject** each item under *Needs review*. Use **Edit** to fix typos, set dates, or give it an **Order** (1, 2, 3…) to pin it to the top.
-3. When **Current Week** is final, tap **Publish bulletin** on the admin page (or use the menu in the sheet). Approved items don't appear on the bulletin until you publish.
-4. Open the PDF and print it, or edit the Doc first if something needs a last-minute tweak.
+## Handing the calling to someone else
 
-**Which Sundays an announcement appears:** from *Start running* through *Stop after*. If *Stop after* is blank, it runs through the *Event date*. If both are blank, it runs until you **Archive** it. Announcements whose event date has passed drop off automatically. The admin page marks items in the upcoming bulletin with an "In … bulletin" badge.
+The data service runs as the Google account that deployed it.
+1. Transfer ownership of the spreadsheet (and the **Ward Bulletins** Drive folder) to the new coordinator.
+2. They run `clasp login`, then `clasp create-deployment`.
+3. Put the new `/exec` address in `docs/api.js`, and transfer the GitHub repo or add them as a collaborator.
 
-**Standing items** (temple schedule, ward council contacts): add a row in the sheet with Status `Approved`, a high Order number, and no dates.
-
-## Good to know
-
-- **The admin link is the password.** Anyone with it can approve announcements and publish. It's sent only to the Notify Email. If it gets around, use **Bulletin → Setup → Reset admin link**; the old link stops working immediately.
-- **The web page shows the last *published* version**, not the live sheet, so half-finished edits never appear on people's phones.
-- **Page overflow:** on a busy week, lower **Print Font Size** to 10, or edit the Doc by hand.
-- **Google banner:** web apps from personal Gmail accounts show a small "created by a Google Apps Script user" bar. That's normal.
-- **When the calling changes hands:** the web app runs as whoever deployed it. Transfer ownership of the sheet to the new coordinator, and have them create a new deployment. Then point the short link at the new URL. (TinyURL links without an account can't be repointed, so make the short link with a ward account if you want to hand it over.)
-- **Prayers:** if Invocation or Benediction is blank (or N/A) on Current Week, the bulletin shows **By Invitation**.
-- **Hymn links:** each hymn number links to that hymn in Gospel Library: hymns 1–341 from *Hymns* (1985), and 1001+ from *Hymns—For Home and Church*. When the Church releases new hymns, `HymnLinks.gs` needs those numbers added. Until then, new hymns show without a link.
-- **Fast Sunday** is detected automatically (Topic "Testimony Meeting" or "FAST SUNDAY" in a speaker slot): speakers are replaced with *Bearing of Testimonies*, and the intermediate hymn is dropped. If Stake/General Conference leaves the program empty, the Topic is shown as a notice.
-
-## Testing locally
-
-`node test/run.js` checks the agenda and announcement logic against a real Fast Sunday program and a regular-week example. It also writes previews of all three pages (bulletin, submit form, and admin with a fake server) to `preview/`.
+The short link points at the GitHub Pages address, which doesn't change.
