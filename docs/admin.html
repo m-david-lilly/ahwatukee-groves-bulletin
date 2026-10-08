@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bulletin admin</title>
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root {
+    --bg: #f6f3ed; --card: #ffffff; --ink: #1f2a37; --muted: #667180; --rule: #e1dacd;
+    --accent: #2f5d7c; --accent-ink: #ffffff; --chip: #eaf1f6;
+    --pending: #8a6100; --pending-bg: #fff2cc; --ok: #2f6b3a; --ok-bg: #dff0e1; --no: #8f2f28; --no-bg: #f8e1df;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #13171c; --card: #1c222a; --ink: #e9e6e0; --muted: #9ba5b0; --rule: #2d353f;
+      --accent: #8db7d6; --accent-ink: #10202c; --chip: #23303b;
+      --pending: #f2c75c; --pending-bg: #3a3017; --ok: #8fd19e; --ok-bg: #1d3323; --no: #f08b82; --no-bg: #3b2220;
+      color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px 16px 60px; }
+  h1 { font: 600 1.4rem/1.2 var(--serif); margin: 4px 0 2px; }
+  .meta { color: var(--muted); font-size: .9rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 14px 0; }
+  .btn { font: 600 .95rem var(--sans); border-radius: 999px; padding: 10px 16px; border: 1px solid var(--rule);
+    background: var(--card); color: var(--ink); cursor: pointer; text-decoration: none; display: inline-block; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.ok { background: var(--ok-bg); border-color: transparent; color: var(--ok); }
+  .btn.no { background: var(--no-bg); border-color: transparent; color: var(--no); }
+  .btn[disabled] { opacity: .55; cursor: wait; }
+  .notice { border-radius: 12px; padding: 10px 14px; margin: 0 0 12px; font-size: .92rem; }
+  .notice.warn { background: var(--pending-bg); color: var(--pending); }
+  .notice.good { background: var(--ok-bg); color: var(--ok); }
+  .notice.bad { background: var(--no-bg); color: var(--no); }
+  .notice a { color: inherit; font-weight: 600; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--rule); margin: 8px 0 14px; overflow-x: auto; }
+  .tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 12px; font: 600 .95rem var(--sans);
+    color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .count { display: inline-block; min-width: 1.5em; padding: 0 6px; border-radius: 999px; background: var(--chip);
+    color: var(--accent); font-size: .8rem; margin-left: 4px; }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .pill { font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 999px; padding: 2px 9px; }
+  .pill.Pending { background: var(--pending-bg); color: var(--pending); }
+  .pill.Approved { background: var(--ok-bg); color: var(--ok); }
+  .pill.Rejected, .pill.Archived { background: var(--chip); color: var(--muted); }
+  .pill.live { background: var(--chip); color: var(--accent); }
+  .card h2 { font-size: 1.1rem; margin: 2px 0 4px; }
+  .when { color: var(--accent); font-size: .9rem; font-weight: 600; }
+  .details { white-space: pre-line; overflow-wrap: anywhere; margin: 6px 0; }
+  .small { color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .empty { color: var(--muted); font-style: italic; text-align: center; padding: 30px 0; }
+  form.edit label { display: block; font-weight: 600; font-size: .85rem; margin: 10px 0 3px; }
+  form.edit input, form.edit textarea { width: 100%; font: inherit; color: inherit; background: var(--bg);
+    border: 1px solid var(--rule); border-radius: 10px; padding: 9px 11px; }
+  form.edit textarea { min-height: 120px; resize: vertical; }
+  .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .row2 { display: grid; grid-template-columns: 1fr 5.5rem; gap: 10px; }
+  @media (max-width: 520px) { .row3 { grid-template-columns: 1fr; } }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg);
+    padding: 10px 18px; border-radius: 999px; font-size: .92rem; box-shadow: 0 4px 18px rgba(0,0,0,.2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bulletin admin</h1>
+  <div class="meta" id="meta">Loading…</div>
+
+  <div class="bar">
+    <button class="btn primary" id="publish" type="button">Publish bulletin</button>
+    <a class="btn" id="view" target="_blank" rel="noopener noreferrer">View bulletin ↗</a>
+    <a class="btn" id="pdf" target="_blank" rel="noopener noreferrer" hidden>PDF ↗</a>
+    <a class="btn" id="doc" target="_blank" rel="noopener noreferrer" hidden>Edit Doc ↗</a>
+    <button class="btn" id="refresh" type="button">Refresh</button>
+  </div>
+  <div id="notices"></div>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="list"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="api.js"></script>
+<script>
+  // The key is after '#' in the link, so it is never sent to GitHub or in a Referer header.
+  var DATA = { key: (location.hash.match(/key=([A-Za-z0-9]+)/) || [])[1] || '', ward: '', bulletinUrl: './' };
+  var state = { items: [], tab: 'Pending', editing: null, dirty: false, busy: false, publishResult: null, error: '' };
+  var TABS = [
+    ['Pending', 'Needs review', function (a) { return a.status === 'Pending' || !a.status; }],
+    ['Approved', 'Approved', function (a) { return a.status === 'Approved'; }],
+    ['Other', 'Rejected & archived', function (a) { return a.status === 'Rejected' || a.status === 'Archived'; }],
+  ];
+  var $ = function (id) { return document.getElementById(id); };
+
+  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function fmt(ymd) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || '');
+    if (!m) return '';
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return DAYS[d.getUTCDay()] + ', ' + MONTHS[+m[2] - 1] + ' ' + +m[3];
+  }
+
+  function call(action, id, changes) {
+    return apiPost({ action: action, key: DATA.key, id: id, changes: changes });
+  }
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.timer); toast.timer = setTimeout(function () { t.hidden = true; }, 2600);
+  }
+  function fail(err) {
+    state.busy = false; state.error = (err && err.message) || String(err); render();
+  }
+
+  function load() {
+    state.error = '';
+    return call('adminList').then(function (res) {
+      state.items = res.items; state.sunday = res.sunday; state.sundayLabel = res.sundayLabel;
+      state.publishedAt = res.publishedAt; state.pdf = res.pdf; state.doc = res.doc;
+      DATA.ward = res.ward || DATA.ward; render();
+    }).catch(fail);
+  }
+
+  function update(id, changes, msg) {
+    state.busy = true; render();
+    return call('adminUpdate', id, changes).then(function (a) {
+      state.items = state.items.map(function (x) { return x.id === a.id ? a : x; });
+      state.busy = false; state.editing = null; state.dirty = true; render(); toast(msg);
+    }).catch(fail);
+  }
+
+  function publish() {
+    state.busy = true; state.publishResult = null; render();
+    $('publish').textContent = 'Publishing… (about 20 seconds)';
+    call('adminPublish').then(function (r) {
+      state.busy = false; state.dirty = false; state.publishResult = r;
+      state.publishedAt = r.publishedAt + ' (for ' + r.dateLabel + ')';
+      state.pdf = r.pdf; state.doc = r.doc;
+      render(); toast('Bulletin published');
+    }).catch(fail);
+  }
+
+  function counts() {
+    return TABS.map(function (t) { return state.items.filter(t[2]).length; });
+  }
+
+  function sortItems(list) {
+    return list.slice().sort(function (a, b) {
+      if (state.tab === 'Approved') {
+        if (a.live !== b.live) return a.live ? -1 : 1;
+        var oa = a.order === '' ? 1e9 : a.order, ob = b.order === '' ? 1e9 : b.order;
+        if (oa !== ob) return oa - ob;
+        return (a.eventDate || '9') < (b.eventDate || '9') ? -1 : 1;
+      }
+      return b.submittedMs - a.submittedMs;
+    });
+  }
+
+  function card(a) {
+    if (state.editing === a.id) return editForm(a);
+    var runs = (a.runFrom || a.runThrough || a.eventDate)
+      ? 'Runs ' + (a.runFrom ? fmt(a.runFrom) : 'now') + ' → ' +
+        (a.runThrough ? fmt(a.runThrough) : a.eventDate ? fmt(a.eventDate) + ' (event)' : 'until archived')
+      : 'Runs until archived';
+    var acts = [];
+    if (a.status !== 'Approved') acts.push(['Approved', 'Approve', 'ok']);
+    if (a.status === 'Pending' || !a.status) acts.push(['Rejected', 'Reject', 'no']);
+    if (a.status === 'Approved') acts.push(['Archived', 'Archive', '']);
+    if (a.status && a.status !== 'Pending') acts.push(['Pending', 'Back to review', '']);
+    var dis = state.busy ? ' disabled' : '';
+    return '<article class="card">' +
+      '<div class="pills"><span class="pill ' + esc(a.status || 'Pending') + '">' + esc(a.status || 'Pending') + '</span>' +
+        (a.live ? '<span class="pill live">In ' + esc(fmt(state.sunday)) + ' bulletin</span>' : '') +
+        (a.order !== '' ? '<span class="pill live">Order ' + esc(a.order) + '</span>' : '') + '</div>' +
+      '<h2>' + esc(a.title) + '</h2>' +
+      (a.eventDate ? '<div class="when">' + esc(fmt(a.eventDate)) + '</div>' : '') +
+      '<div class="details">' + esc(a.details) + '</div>' +
+      (a.contact ? '<div class="small">Printed contact: ' + esc(a.contact) + '</div>' : '') +
+      '<div class="small">' + esc(runs) + '</div>' +
+      '<div class="small">From ' + esc(a.submittedBy || '—') + (a.reach ? ' · ' + esc(a.reach) : '') +
+        (a.submitted ? ' · ' + esc(a.submitted) : '') + '</div>' +
+      (a.notes ? '<div class="small">Notes: ' + esc(a.notes) + '</div>' : '') +
+      '<div class="actions">' + acts.map(function (x) {
+        return '<button class="btn ' + x[2] + '" data-act="status" data-id="' + esc(a.id) + '" data-v="' + x[0] + '"' + dis + '>' + x[1] + '</button>';
+      }).join('') + '<button class="btn" data-act="edit" data-id="' + esc(a.id) + '"' + dis + '>Edit</button></div>' +
+      '</article>';
+  }
+
+  function editForm(a) {
+    function field(name, label, value, type, extra) {
+      return '<div><label for="f-' + name + '">' + label + '</label><input id="f-' + name + '" name="' + name +
+        '" type="' + (type || 'text') + '" value="' + esc(value) + '"' + (extra || '') + '></div>';
+    }
+    return '<form class="card edit" data-id="' + esc(a.id) + '">' +
+      '<div class="row2">' + field('title', 'Title', a.title, 'text', ' maxlength="120" required') +
+        field('order', 'Order', a.order, 'number', ' min="1" max="999"') + '</div>' +
+      '<label for="f-details">Details</label><textarea id="f-details" name="details" maxlength="3000">' + esc(a.details) + '</textarea>' +
+      '<div class="row3">' + field('eventDate', 'Event date', a.eventDate, 'date') +
+        field('runFrom', 'Start running', a.runFrom, 'date') + field('runThrough', 'Stop after', a.runThrough, 'date') + '</div>' +
+      field('contact', 'Printed contact', a.contact, 'text', ' maxlength="120"') +
+      field('notes', 'Private notes', a.notes, 'text', ' maxlength="500"') +
+      '<div class="actions"><button class="btn primary" type="submit"' + (state.busy ? ' disabled' : '') + '>Save</button>' +
+      '<button class="btn" type="button" data-act="cancel">Cancel</button></div></form>';
+  }
+
+  function render() {
+    $('meta').textContent = (DATA.ward ? DATA.ward + ' · ' : '') +
+      (state.sundayLabel ? 'Next bulletin: ' + state.sundayLabel : 'Loading…') +
+      (state.publishedAt ? ' · Last published ' + state.publishedAt : '');
+    if (DATA.bulletinUrl) $('view').href = DATA.bulletinUrl; else $('view').hidden = true;
+    $('publish').disabled = $('refresh').disabled = state.busy;
+    $('pdf').hidden = !state.pdf; if (state.pdf) $('pdf').href = state.pdf;
+    $('doc').hidden = !state.doc; if (state.doc) $('doc').href = state.doc;
+    if (!state.busy) $('publish').textContent = 'Publish bulletin';
+
+    var n = [];
+    if (state.error) n.push('<div class="notice bad">' + esc(state.error) + '</div>');
+    if (state.dirty) n.push('<div class="notice warn">Changes are saved. They appear on the bulletin after you <b>Publish</b>.</div>');
+    if (state.publishResult) {
+      var r = state.publishResult;
+      n.push('<div class="notice good">Published for ' + esc(r.dateLabel) + ' with ' + r.count + ' announcement' +
+        (r.count === 1 ? '' : 's') + '. <a href="' + esc(r.web) + '" target="_blank" rel="noopener noreferrer">Bulletin</a> · ' +
+        '<a href="' + esc(r.pdf) + '" target="_blank" rel="noopener noreferrer">PDF to print</a> · ' +
+        '<a href="' + esc(r.doc) + '" target="_blank" rel="noopener noreferrer">Edit Doc</a></div>');
+    }
+    $('notices').innerHTML = n.join('');
+
+    var c = counts();
+    $('tabs').innerHTML = TABS.map(function (t, i) {
+      return '<button class="tab" role="tab" data-tab="' + t[0] + '" aria-selected="' + (state.tab === t[0]) + '">' +
+        t[1] + '<span class="count">' + c[i] + '</span></button>';
+    }).join('');
+
+    var tab = TABS.filter(function (t) { return t[0] === state.tab; })[0];
+    var list = sortItems(state.items.filter(tab[2]));
+    $('list').innerHTML = list.length ? list.map(card).join('')
+      : '<div class="empty">' + (state.tab === 'Pending' ? 'Nothing waiting for review.' : 'Nothing here.') + '</div>';
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.tab) { state.tab = b.dataset.tab; state.editing = null; render(); return; }
+    if (b.dataset.act === 'status') {
+      var v = b.dataset.v;
+      update(b.dataset.id, { status: v }, { Approved: 'Approved', Rejected: 'Rejected', Archived: 'Archived', Pending: 'Moved back to review' }[v]);
+    } else if (b.dataset.act === 'edit') { state.editing = b.dataset.id; render(); }
+    else if (b.dataset.act === 'cancel') { state.editing = null; render(); }
+  });
+  document.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, ch = {};
+    ['title', 'order', 'details', 'eventDate', 'runFrom', 'runThrough', 'contact', 'notes'].forEach(function (k) {
+      ch[k] = f.elements[k].value.trim();
+    });
+    if (!ch.title) { state.error = 'The title cannot be empty.'; return render(); }
+    if (ch.runFrom && ch.runThrough && ch.runThrough < ch.runFrom) {
+      state.error = '"Stop after" must be on or after "Start running".'; return render();
+    }
+    state.error = '';
+    update(f.dataset.id, ch, 'Saved');
+  });
+  $('publish').addEventListener('click', publish);
+  $('refresh').addEventListener('click', function () { state.publishResult = null; load(); });
+
+  render();
+  if (DATA.key) {
+    load();
+  } else {
+    state.error = 'This admin link is missing its key. Use the link from your email, or Bulletin → Admin page in the spreadsheet.';
+    render();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Submit a bulletin announcement</title>
+<style>
+  :root {
+    --bg: #f6f3ed; --card: #ffffff; --ink: #1f2a37; --muted: #667180; --rule: #d9d2c4;
+    --accent: #2f5d7c; --accent-ink: #ffffff; --err: #a3322a; --ok: #2f6b3a;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #13171c; --card: #1c222a; --ink: #e9e6e0; --muted: #9ba5b0; --rule: #36404b;
+      --accent: #8db7d6; --accent-ink: #10202c; --err: #f08b82; --ok: #8fd19e; color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 var(--sans); }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font: 600 1.5rem/1.25 var(--serif); margin: 4px 0 4px; text-align: center; }
+  .intro { color: var(--muted); text-align: center; margin: 0 0 18px; font-size: .95rem; }
+  form, .done { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 18px; }
+  label { display: block; font-weight: 600; margin: 14px 0 4px; font-size: .95rem; }
+  label:first-child { margin-top: 0; }
+  .hint { display: block; font-weight: 400; color: var(--muted); font-size: .84rem; }
+  input, textarea { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 11px 12px; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea { min-height: 130px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 420px) { .row { grid-template-columns: 1fr; } }
+  fieldset { border: 0; border-top: 1px solid var(--rule); margin: 20px 0 0; padding: 12px 0 0; }
+  legend { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; padding-right: 8px; }
+  .count { text-align: right; color: var(--muted); font-size: .8rem; }
+  .hp { position: absolute; left: -9999px; }
+  button { width: 100%; margin-top: 20px; font: 600 1.05rem var(--sans); background: var(--accent);
+    color: var(--accent-ink); border: 0; border-radius: 999px; padding: 14px; cursor: pointer; }
+  button[disabled] { opacity: .6; cursor: wait; }
+  .err { color: var(--err); margin-top: 12px; }
+  .done { text-align: center; }
+  .done h2 { font: 600 1.25rem var(--serif); color: var(--ok); margin: 4px 0 8px; }
+  a { color: var(--accent); }
+  .back { text-align: center; margin-top: 18px; font-size: .95rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title">Submit a bulletin announcement</h1>
+  <p class="intro" id="intro"></p>
+
+  <form id="f" novalidate>
+    <label for="t">Title</label>
+    <input id="t" name="title" maxlength="120" required placeholder="e.g. Ward Trunk-or-Treat">
+
+    <label for="d">Details <span class="hint">What, when, where, and anything people need to bring or do</span></label>
+    <textarea id="d" name="details" maxlength="1500" required></textarea>
+    <div class="count" id="dc">0 / 1500</div>
+
+    <label for="e">Event date <span class="hint">Optional. The announcement comes down after this date.</span></label>
+    <input id="e" name="eventDate" type="date">
+
+    <label for="pc">Contact to print <span class="hint">Optional. Shown in the bulletin, e.g. "Sister Jones, 555-0123"</span></label>
+    <input id="pc" name="publicContact" maxlength="120">
+
+    <fieldset>
+      <legend>Which Sundays?</legend>
+      <div class="row">
+        <div><label for="rf">Start running</label><input id="rf" name="runFrom" type="date"></div>
+        <div><label for="rt">Stop running after</label><input id="rt" name="runThrough" type="date"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>About you (not published)</legend>
+      <label for="n">Your name</label>
+      <input id="n" name="name" maxlength="100" required autocomplete="name">
+      <label for="r">Email or phone <span class="hint">In case the bulletin coordinator has a question</span></label>
+      <input id="r" name="reach" maxlength="120" required autocomplete="email">
+    </fieldset>
+
+    <div class="hp" aria-hidden="true"><label for="w">Website</label><input id="w" name="website" tabindex="-1" autocomplete="off"></div>
+
+    <div class="err" id="err" role="alert" hidden></div>
+    <button id="go" type="submit">Submit announcement</button>
+  </form>
+
+  <div class="done" id="done" hidden>
+    <h2>Thank you!</h2>
+    <p>Your announcement was sent to the bulletin coordinator for review.</p>
+    <p><a href="#" id="again">Submit another</a></p>
+  </div>
+
+  <p class="back" id="back"></p>
+</div>
+<script src="api.js"></script>
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  var DATA = { ward: '', deadline: '', nextSunday: comingSunday() };
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function comingSunday() {
+    var d = new Date();
+    d.setDate(d.getDate() + (7 - d.getDay()) % 7);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function applyInfo() {
+    if (DATA.ward) document.title = 'Submit an announcement — ' + DATA.ward;
+    $('intro').textContent = (DATA.ward ? DATA.ward + ' bulletin. ' : '') +
+      (DATA.deadline ? 'Submissions for Sunday are due ' + DATA.deadline + '. ' : '') +
+      'Each announcement is reviewed before it is published.';
+  }
+  applyInfo();
+  var back = document.createElement('a');
+  back.href = './'; back.textContent = '← Back to the bulletin';
+  $('back').appendChild(back);
+  apiGet({ api: 'submitInfo' }).then(function (info) {
+    var untouched = $('rf').value === DATA.nextSunday;
+    DATA.ward = info.ward; DATA.deadline = info.deadline; DATA.nextSunday = info.nextSunday || DATA.nextSunday;
+    if (untouched) resetDates();
+    applyInfo();
+  }).catch(function () { /* the form still works with the defaults */ });
+
+  function resetDates() {
+    $('rf').value = DATA.nextSunday; $('rt').value = '';
+    $('rf').min = $('rt').min = $('e').min = DATA.nextSunday;
+  }
+  resetDates();
+  $('d').addEventListener('input', function () { $('dc').textContent = this.value.length + ' / 1500'; });
+  $('e').addEventListener('change', function () { if (!$('rt').value) $('rt').value = this.value; });
+
+  function showErr(msg) { $('err').textContent = msg; $('err').hidden = !msg; }
+
+  $('f').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var f = this, data = {};
+    Array.prototype.forEach.call(f.elements, function (el) { if (el.name) data[el.name] = el.value.trim(); });
+    if (!data.title || !data.details || !data.name || !data.reach) {
+      return showErr('Please fill in the title, details, your name, and how to reach you.');
+    }
+    if (data.runFrom && data.runThrough && data.runThrough < data.runFrom) {
+      return showErr('"Stop running after" must be on or after "Start running".');
+    }
+    showErr('');
+    $('go').disabled = true; $('go').textContent = 'Sending…';
+    apiPost({ action: 'submit', form: data })
+      .then(function () {
+        f.reset(); resetDates(); $('dc').textContent = '0 / 1500';
+        f.hidden = true; $('done').hidden = false;
+        $('go').disabled = false; $('go').textContent = 'Submit announcement';
+        window.scrollTo(0, 0);
+      })
+      .catch(function (err) {
+        showErr((err && err.message) || 'Something went wrong. Please try again.');
+        $('go').disabled = false; $('go').textContent = 'Submit announcement';
+      });
+  });
+  $('again').addEventListener('click', function (ev) {
+    ev.preventDefault(); $('done').hidden = true; $('f').hidden = false;
+  });
+</script>
+</body>
+</html>
