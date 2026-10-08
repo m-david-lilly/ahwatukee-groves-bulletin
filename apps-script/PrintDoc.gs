@@ -149,7 +149,9 @@ function writeAgenda_(cell, snap, S, width) {
       flush();
       S(cell.appendParagraph(it.text), { italic: true, align: A.CENTER, before: 5, after: 5 });
     } else if (it.type === 'hymn') {
-      run.push([it.label, it.number + (it.title ? '  ' + it.title : ''), it.number.length, it.url]);
+      // "Oh, What Songs of the Heart  286": title first, then the bold hymn number.
+      var text = (it.title ? it.title + '  ' : '') + it.number;
+      run.push([it.label, text, text.length - it.number.length, it.url]);
     } else {
       run.push([it.label, it.value]);
     }
@@ -203,7 +205,7 @@ function writeAnnouncements_(cell, snap, settings, S, announcements, hiddenCount
   }
 }
 
-/** rows: [label, value, boldPrefixLength?, prefixLinkUrl?]. Label left, value right-aligned. */
+/** rows: [label, value, boldFrom?, linkUrl?]. Label left, value right-aligned; value[boldFrom..] is bold (and linked). */
 function pairTable_(cell, rows, S, labelW, width, scale, roomy) {
   var t = cell.appendTable(rows.map(function (r) { return [r[0], r[1]]; }));
   t.setBorderWidth(0);
@@ -215,9 +217,14 @@ function pairTable_(cell, rows, S, labelW, width, scale, roomy) {
       var p = S(tc.getChild(0).asParagraph(), c === 0
         ? { size: scale * 0.92, color: MUTED }
         : { size: scale, align: DocumentApp.HorizontalAlignment.RIGHT });
-      if (c === 1 && r[2]) p.editAsText().setBold(0, r[2] - 1, true);
-      if (c === 1 && r[3]) p.editAsText().setLinkUrl(0, r[2] - 1, r[3]).setUnderline(0, r[2] - 1, false)
-        .setForegroundColor(0, r[2] - 1, INK); // clickable in the PDF, looks normal on paper
+      if (c === 1 && r[2] != null) {
+        var end = String(r[1]).length - 1;
+        p.editAsText().setBold(r[2], end, true);
+        if (r[3]) {
+          p.editAsText().setLinkUrl(r[2], end, r[3]).setUnderline(r[2], end, false)
+            .setForegroundColor(r[2], end, INK); // clickable in the PDF, looks normal on paper
+        }
+      }
     }
   });
   return t;
