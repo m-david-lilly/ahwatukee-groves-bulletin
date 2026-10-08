@@ -209,6 +209,16 @@ function scheduleLine(classesTime, meetingTime) {
     meetingTime ? 'Sacrament Meeting ' + cleanValue(meetingTime) : ''].filter(String).join('  ·  ');
 }
 
+/**
+ * Stop date to store for a new submission: the one they chose; else none when an event date
+ * will end it; else the first Sunday it runs, so one-off notices don't linger. (Clearing the
+ * stop date later on the admin page makes an announcement run until archived.)
+ */
+function defaultRunThrough(runFrom, runThrough, eventDate, comingSunday) {
+  if (runThrough || eventDate) return runThrough || '';
+  return nextSundayYmd(runFrom || comingSunday);
+}
+
 /** The coming Sunday (today if today is Sunday). */
 function nextSundayYmd(todayYmd) {
   var p = ymdParts_(todayYmd);

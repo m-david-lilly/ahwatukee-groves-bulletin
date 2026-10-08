@@ -28,7 +28,7 @@ One system for the electronic and printed sacrament meeting bulletin, driven by 
 
 Optional: **Bulletin → Setup → Auto-publish every Saturday evening** (6 PM Arizona time). It emails you the PDF link.
 
-**Which Sundays an announcement appears:** from *Start running* through *Stop after*. If *Stop after* is blank, it runs through the *Event date*. If both are blank, it runs until you **Archive** it. Items whose event date has passed drop off automatically.
+**Which Sundays an announcement appears:** from *Start running* through *Stop after*. If *Stop after* is blank, it runs through the *Event date*. A submission with neither date runs for one Sunday: the form fills in *Stop after* for it. To keep an item running until you **Archive** it, clear *Stop after* (and leave the event date blank) with **Edit** on the admin page. Items whose event date has passed drop off automatically.
 
 **Standing items** (temple schedule, ward council contacts): add a row in the sheet with Status `Approved`, a high Order number, and no dates.
 

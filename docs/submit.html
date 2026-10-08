@@ -25,6 +25,8 @@
   label { display: block; font-weight: 600; margin: 14px 0 4px; font-size: .95rem; }
   label:first-child { margin-top: 0; }
   .hint { display: block; font-weight: 400; color: var(--muted); font-size: .84rem; }
+  .opt { font-weight: 400; color: var(--muted); }
+  .note { margin: 10px 0 0; }
   input, textarea { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--rule);
     border-radius: 10px; padding: 11px 12px; }
   input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -68,8 +70,10 @@
       <legend>Which Sundays?</legend>
       <div class="row">
         <div><label for="rf">Start running</label><input id="rf" name="runFrom" type="date"></div>
-        <div><label for="rt">Stop running after</label><input id="rt" name="runThrough" type="date"></div>
+        <div><label for="rt">Stop running after <span class="opt">(optional)</span></label><input id="rt" name="runThrough" type="date"></div>
       </div>
+      <p class="hint note">Leave <b>Stop running after</b> blank to run it through the event date.
+        With no event date, it runs for one Sunday.</p>
     </fieldset>
 
     <fieldset>

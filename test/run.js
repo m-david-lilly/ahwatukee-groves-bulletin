@@ -11,7 +11,7 @@ vm.createContext(ctx);
 for (const f of ['HymnLinks.gs', 'Model.gs']) {
   vm.runInContext(fs.readFileSync(path.join(root, 'apps-script', f), 'utf8'), ctx);
 }
-const { buildAgenda, selectAnnouncements, parseHymn, formatYmd, nextSundayYmd, scheduleLine } = ctx;
+const { buildAgenda, selectAnnouncements, parseHymn, formatYmd, nextSundayYmd, scheduleLine, defaultRunThrough } = ctx;
 
 // "Current Week" tab as it looked on 2026-10-07 (a Fast Sunday).
 const fastRows = [
@@ -86,6 +86,16 @@ assert.strictEqual(selectAnnouncements(ann, '2026-10-31').map((a) => a.title).jo
 
 assert.strictEqual(scheduleLine('10:00 AM', '11:15 AM'), 'Classes 10:00 AM  ·  Sacrament Meeting 11:15 AM');
 assert.strictEqual(scheduleLine('', '11:15 AM'), 'Sacrament Meeting 11:15 AM');
+
+// New submissions: an explicit stop date or an event date wins; otherwise one Sunday only.
+assert.strictEqual(defaultRunThrough('2026-10-11', '2026-10-25', '', '2026-10-11'), '2026-10-25');
+assert.strictEqual(defaultRunThrough('2026-10-11', '', '2026-10-30', '2026-10-11'), '');
+assert.strictEqual(defaultRunThrough('2026-10-18', '', '', '2026-10-11'), '2026-10-18');
+assert.strictEqual(defaultRunThrough('2026-10-14', '', '', '2026-10-11'), '2026-10-18'); // midweek start
+assert.strictEqual(defaultRunThrough('', '', '', '2026-10-11'), '2026-10-11');
+const oneOff = { status: 'Approved', title: 'x', details: 'x', runFrom: '2026-10-11', runThrough: '2026-10-11', eventDate: '' };
+assert.strictEqual(selectAnnouncements([oneOff], '2026-10-11').length, 1);
+assert.strictEqual(selectAnnouncements([oneOff], '2026-10-18').length, 0);
 
 console.log('All model tests passed.');
 

@@ -338,6 +338,7 @@ function submitAnnouncement(f) {
   if (a.runFrom && a.runThrough && a.runThrough < a.runFrom) {
     throw new Error('"Stop running after" must be on or after "Start running".');
   }
+  a.runThrough = defaultRunThrough(a.runFrom, a.runThrough, a.eventDate, nextSundayYmd(todayYmd_(ss_())));
 
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
