@@ -175,7 +175,9 @@
       var h = +m[1];
       return (h % 12 || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
     };
-    return fmt(e.start.slice(0, 10)) + (e.allDay ? ' · All day' : ' · ' + t(e.start) +
+    var year = e.start.slice(0, 4);
+    var day = fmt(e.start.slice(0, 10)) + (year !== String(new Date().getFullYear()) ? ', ' + year : '');
+    return day + (e.allDay ? ' · All day' : ' · ' + t(e.start) +
       (e.end && e.end.slice(0, 10) === e.start.slice(0, 10) ? ' – ' + t(e.end) : ''));
   }
 
