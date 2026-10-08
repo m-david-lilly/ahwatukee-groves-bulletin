@@ -226,3 +226,73 @@ function nextSundayYmd(todayYmd) {
   d.setUTCDate(d.getUTCDate() + (7 - d.getUTCDay()) % 7);
   return d.toISOString().slice(0, 10);
 }
+
+/* ----------------------------------------------------- ward website activities */
+/*
+ * The ward's page on local.churchofjesuschrist.org loads its activity list from an
+ * unofficial JSON feed (a Yext "unit event details" document). These helpers turn that
+ * feed into a simple list; if the Church changes it, the admin page just reports that
+ * the list couldn't be loaded.
+ */
+
+var AUDIENCE_LABELS = {
+  'EVERYONE': 'Everyone', 'WOMEN': 'Women', 'MEN': 'Men',
+  'GIRLS_(11+)': 'Youth girls', 'BOYS_(11+)': 'Youth boys',
+  'SINGLE_ADULT_(18-30)': 'Young single adults', 'SINGLE_ADULT_(31+)': 'Single adults 31+',
+};
+
+/** Upcoming scheduled activities from the feed, ward first then stake, sorted by start time. */
+function wardFeedEvents(feed, todayYmd) {
+  var doc = feed && feed.response && feed.response.docs && feed.response.docs[0];
+  if (!doc) throw new Error('The ward website feed had no unit data.');
+  var out = [];
+  var seen = {};
+  function take(list, source) {
+    (list || []).forEach(function (e) {
+      var start = String((e.time && e.time.start) || '');
+      if (e.c_eventStatus !== 'SCHEDULED' || !start || start.slice(0, 10) < todayYmd) return;
+      var dupe = cleanValue(e.name).toLowerCase() + '|' + start;
+      if (seen[dupe]) return;
+      seen[dupe] = true;
+      var addr = e.address || {};
+      out.push({
+        id: String(e.id),
+        source: source,
+        name: cleanValue(e.name),
+        start: start,
+        end: String((e.time && e.time.end) || ''),
+        allDay: !!e.c_isAllDayEvent,
+        audience: (e.c_audienceCategory || []).map(function (a) {
+          return AUDIENCE_LABELS[a] || String(a).toLowerCase().replace(/_/g, ' ');
+        }).join(', '),
+        description: String(e.description || '').trim(),
+        where: [addr.line1, addr.city].filter(Boolean).join(', '),
+        url: String(e.c_eventPagesURL || ''),
+      });
+    });
+  }
+  take(doc.c_linkedEvents, 'Ward');
+  (doc.c_unitParent || []).forEach(function (p) { take(p.c_linkedEvents, 'Stake'); });
+  out.sort(function (a, b) { return a.start < b.start ? -1 : a.start > b.start ? 1 : 0; });
+  return out;
+}
+
+/** "7:00 PM" from "2026-10-28T19:00". */
+function clockTime(isoLocal) {
+  var m = String(isoLocal).match(/T(\d{2}):(\d{2})/);
+  if (!m) return '';
+  var h = Number(m[1]);
+  return (h % 12 || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
+}
+
+/** When/where lines plus the description, ready for an announcement's Details. */
+function eventAnnouncementDetails(ev) {
+  var when = ev.allDay ? 'All day'
+    : clockTime(ev.start) + (ev.end && ev.end.slice(0, 10) === ev.start.slice(0, 10) ? ' – ' + clockTime(ev.end) : '');
+  var lines = [];
+  if (when) lines.push('Time: ' + when);
+  if (ev.where) lines.push('Where: ' + ev.where);
+  if (ev.audience && ev.audience !== 'Everyone') lines.push('For: ' + ev.audience);
+  if (ev.description) lines.push('', ev.description);
+  return lines.join(String.fromCharCode(10)).slice(0, 1500);
+}

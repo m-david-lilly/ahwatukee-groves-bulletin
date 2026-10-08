@@ -19,9 +19,9 @@ var BULLETIN = {
 };
 
 var ANNOUNCEMENT_HEADERS = ['Submitted', 'Status', 'Order', 'Title', 'Details', 'Event Date',
-  'Run From', 'Run Through', 'Public Contact', 'Submitted By', 'Submitter Contact', 'Manager Notes', 'ID'];
+  'Run From', 'Run Through', 'Public Contact', 'Submitted By', 'Submitter Contact', 'Manager Notes', 'ID', 'Source'];
 // Bump when SETTING_DEFAULTS or the tab layout changes; the web app then upgrades the tabs itself.
-var SETUP_VERSION = 4;
+var SETUP_VERSION = 5;
 var ANNOUNCEMENT_STATUSES = ['Pending', 'Approved', 'Rejected', 'Archived'];
 
 // Admin page field -> sheet column, with the longest text allowed.
@@ -42,6 +42,7 @@ var SETTING_DEFAULTS = [
   ['Stake Name', 'Tempe Arizona West Stake', 'Shown under the ward name (blank = leave off)'],
   ['Classes Time', '10:00 AM', 'When Sunday School / classes start (blank = leave off)'],
   ['Meeting Time', '11:10 AM', 'When sacrament meeting starts'],
+  ['Ward Activities Feed', 'https://cdn.yextapis.com/v2/accounts/2970756/content/getUnitEventDetails?api_key=ac142022779c885e6473eee98a14b9c1&v=20250101&id=chq-unit-187305', 'Unofficial feed behind the activity list on the ward website; used by the Ward website tab on the admin page. Blank = turn the tab off'],
   ['Ward Website', 'https://local.churchofjesuschrist.org/en/units/us/az/ahwatukee-groves-ward', 'Linked from both bulletins (blank = leave off)'],
   ['Location', '', 'Building name or address (optional)'],
   ['Presiding', '', 'Optional. Leave blank to leave the Presiding line off'],
@@ -293,6 +294,8 @@ function doPost(e) {
     if (b.action === 'adminList') return adminList(b.key);
     if (b.action === 'adminUpdate') return adminUpdate(b.key, b.id, b.changes);
     if (b.action === 'adminPublish') return adminPublish(b.key);
+    if (b.action === 'adminWardEvents') return adminWardEvents(b.key);
+    if (b.action === 'adminImportEvent') return adminImportEvent(b.key, b.id);
     throw new Error('Unknown request.');
   });
 }
@@ -621,6 +624,81 @@ function adminPublish(key) {
   var r = publish_(true);
   return { dateLabel: r.snap.dateLabel, count: r.snap.announcements.length, web: r.web, doc: r.doc, pdf: r.pdf,
     publishedAt: r.snap.publishedAt };
+}
+
+/* ------------------------------------------------ ward website activities */
+
+/** Upcoming activities from the ward website, cached for 30 minutes. */
+function wardEvents_(settings) {
+  var url = String(settings['Ward Activities Feed'] || '').trim();
+  if (!url) throw new Error('The ward website activity list is turned off (Ward Activities Feed is blank).');
+  var cache = CacheService.getScriptCache();
+  var raw = cache.get('ward-feed');
+  if (!raw) {
+    var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) {
+      throw new Error('The ward website activity list could not be loaded (' + res.getResponseCode() +
+        '). The Church may have changed it. Add announcements by hand for now.');
+    }
+    raw = res.getContentText();
+    if (raw.length < 95000) cache.put('ward-feed', raw, 1800); // cache entries max out near 100 KB
+  }
+  return wardFeedEvents(JSON.parse(raw), todayYmd_(ss_()));
+}
+
+function adminWardEvents(key) {
+  requireAdmin_(key);
+  var ss = ss_();
+  var events = wardEvents_(readSettings_(ss));
+  var sh = announcementsSheet_(ss);
+  var col = headerIndex_(sh);
+  var added = {};
+  if ('Source' in col && sh.getLastRow() > 1) {
+    sh.getRange(2, col['Source'] + 1, sh.getLastRow() - 1, 1).getValues().forEach(function (r) {
+      if (r[0]) added[String(r[0])] = true;
+    });
+  }
+  events.forEach(function (e) { e.added = !!added[e.id]; });
+  return { events: events };
+}
+
+/** Copies one ward website activity into the sheet as a Pending announcement. */
+function adminImportEvent(key, id) {
+  requireAdmin_(key);
+  var ss = ss_();
+  var settings = readSettings_(ss);
+  var ev = wardEvents_(settings).filter(function (e) { return e.id === String(id); })[0];
+  if (!ev) throw new Error('That activity is no longer on the ward website.');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = announcementsSheet_(ss);
+    var col = ensureIds_(sh);
+    if (!('Source' in col)) {
+      sh.getRange(1, sh.getLastColumn() + 1).setValue('Source').setFontWeight('bold');
+      col = headerIndex_(sh);
+    }
+    var row = new Array(sh.getLastColumn()).fill('');
+    function put(h, v) { if (h in col) row[col[h]] = v; }
+    var newId = newId_();
+    put('Submitted', new Date());
+    put('Status', 'Pending');
+    put('Title', noFormula_(ev.name));
+    put('Details', noFormula_(eventAnnouncementDetails(ev)));
+    put('Event Date', ev.start.slice(0, 10));
+    put('Run From', nextSundayYmd(todayYmd_(ss)));
+    put('Submitted By', ev.source + ' website');
+    put('Manager Notes', ev.url ? 'From ' + ev.url : 'From the ward website');
+    put('ID', newId);
+    put('Source', ev.id);
+    sh.appendRow(row);
+    var r = sh.getRange(sh.getLastRow(), 1, 1, sh.getLastColumn()).getValues()[0];
+    var a = rowToAnnouncement_(r, col, ss.getSpreadsheetTimeZone());
+    a.live = isAnnouncementActive(a, currentSunday_(ss));
+    return a;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function readHymnTitles_(ss) {

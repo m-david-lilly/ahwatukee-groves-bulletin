@@ -11,7 +11,8 @@ vm.createContext(ctx);
 for (const f of ['HymnLinks.gs', 'Model.gs']) {
   vm.runInContext(fs.readFileSync(path.join(root, 'apps-script', f), 'utf8'), ctx);
 }
-const { buildAgenda, selectAnnouncements, parseHymn, formatYmd, nextSundayYmd, scheduleLine, defaultRunThrough } = ctx;
+const { buildAgenda, selectAnnouncements, parseHymn, formatYmd, nextSundayYmd, scheduleLine, defaultRunThrough,
+  wardFeedEvents, eventAnnouncementDetails, clockTime } = ctx;
 
 // "Current Week" tab as it looked on 2026-10-07 (a Fast Sunday).
 const fastRows = [
@@ -97,6 +98,37 @@ const oneOff = { status: 'Approved', title: 'x', details: 'x', runFrom: '2026-10
 assert.strictEqual(selectAnnouncements([oneOff], '2026-10-11').length, 1);
 assert.strictEqual(selectAnnouncements([oneOff], '2026-10-18').length, 0);
 
+// Ward website feed (same shape as the real one; made-up content).
+const feed = { response: { docs: [{
+  c_linkedEvents: [
+    { id: 'chq-event-1', name: 'Ward Temple Night', c_eventStatus: 'SCHEDULED', time: { start: '2026-10-16T19:00', end: '2026-10-16T20:00' },
+      c_audienceCategory: ['EVERYONE'], address: { line1: '1050 West Grove Parkway', city: 'Tempe' }, description: 'Meet at the temple.' },
+    { id: 'chq-event-2', name: 'Last Year Potluck', c_eventStatus: 'SCHEDULED', time: { start: '2025-02-09T11:15' } },
+    { id: 'chq-draft-3', name: 'Draft', c_eventStatus: null, time: { start: '2026-12-01T10:00' } },
+  ],
+  c_unitParent: [{ c_linkedEvents: [
+    { id: 'chq-event-4', name: 'Halloween Dance Party', c_eventStatus: 'SCHEDULED', time: { start: '2026-10-28T19:00', end: '2026-10-28T20:30' },
+      c_audienceCategory: ['GIRLS_(11+)', 'BOYS_(11+)'], description: 'Costume contest (no masks).' },
+    { id: 'chq-event-5', name: 'Halloween Dance Party', c_eventStatus: 'SCHEDULED', time: { start: '2026-10-28T19:00' } },
+    { id: 'chq-event-6', name: 'Stake Center Closed', c_eventStatus: 'SCHEDULED', c_isAllDayEvent: true, time: { start: '2026-10-08T08:00' } },
+  ] }],
+}] } };
+const evs = wardFeedEvents(feed, '2026-10-08');
+assert.strictEqual(evs.map((e) => e.source + ':' + e.name).join(' | '),
+  'Stake:Stake Center Closed | Ward:Ward Temple Night | Stake:Halloween Dance Party'); // past, drafts, duplicates dropped
+assert.strictEqual(evs[2].audience, 'Youth girls, Youth boys');
+assert.strictEqual(clockTime('2026-10-28T19:00'), '7:00 PM');
+assert.strictEqual(clockTime('2026-10-28T00:30'), '12:30 AM');
+assert.strictEqual(eventAnnouncementDetails(evs[1]).split(String.fromCharCode(10)).join(' / '),
+  'Time: 7:00 PM – 8:00 PM / Where: 1050 West Grove Parkway, Tempe /  / Meet at the temple.');
+assert.strictEqual(eventAnnouncementDetails(evs[0]), 'Time: All day');
+assert.throws(() => wardFeedEvents({}, '2026-10-08'), /no unit data/);
+if (process.env.WARD_FEED) { // optional smoke test against a saved copy of the real feed
+  const real = wardFeedEvents(JSON.parse(fs.readFileSync(process.env.WARD_FEED, 'utf8')), '2026-10-08');
+  console.log('real feed: ' + real.length + ' upcoming');
+  real.forEach((e) => console.log('  ' + e.start + ' ' + e.source + ': ' + e.name + ' [' + e.audience + ']'));
+}
+
 console.log('All model tests passed.');
 
 // ---- previews: render the Apps Script templates with sample data
@@ -113,7 +145,7 @@ const adminItems = ann.map((a, i) => ({ id: 'id' + i, notes: '', submittedBy: 'S
   live: ctx.isAnnouncementActive(a, '2026-10-11') }));
 adminItems[2].title = 'Primary Halloween Party'; adminItems[2].details = 'Costumes welcome! Friday 6 PM in the cultural hall.';
 
-function mockServer(bulletin, items) {
+function mockServer(bulletin, items, wardEvents) {
   const later = (v, ms) => new Promise((res) => setTimeout(() => res(JSON.parse(JSON.stringify(v))), ms));
   const isActive = (a, s) => a.status === 'Approved' && !(a.runFrom && s < a.runFrom) &&
     !((a.runThrough || a.eventDate) && s > (a.runThrough || a.eventDate)) && !(a.eventDate && a.eventDate < s);
@@ -134,6 +166,16 @@ function mockServer(bulletin, items) {
       a.live = isActive(a, '2026-10-11');
       return later(a, 250);
     }
+    if (req.action === 'adminWardEvents') return later({ events: wardEvents }, 600);
+    if (req.action === 'adminImportEvent') {
+      const e = wardEvents.find((x) => x.id === req.id);
+      e.added = true;
+      const a = { id: 'new' + req.id, status: 'Pending', order: '', title: e.name, details: e.details, eventDate: e.start.slice(0, 10),
+        runFrom: '2026-10-11', runThrough: '', contact: '', submittedBy: e.source + ' website', reach: '', notes: 'From ' + e.url,
+        submitted: 'Thu Oct 8, 1:00 AM', submittedMs: 99, live: false };
+      items.push(a);
+      return later(a, 400);
+    }
     if (req.action === 'adminPublish') {
       return later({ dateLabel: 'Sunday, October 11, 2026', count: items.filter((a) => a.live).length,
         web: './', doc: '#doc', pdf: '#pdf', publishedAt: 'Wed Oct 7 at 11:40 PM' }, 800);
@@ -145,7 +187,8 @@ function mockServer(bulletin, items) {
 const page = (file, bulletin) => fs.readFileSync(path.join(root, 'docs', file), 'utf8').replace(
   '<script src="api.js"></script>',
   '<script>(' + mockServer + ')(' + JSON.stringify(bulletin).split('<').join(String.fromCharCode(92) + 'u003c') + ',' +
-    JSON.stringify(adminItems) + ')</script><script src="api.js"></script>');
+    JSON.stringify(adminItems) + ',' + JSON.stringify(evs.map((e) => ({ ...e, details: eventAnnouncementDetails(e), url: '#' })))
+    + ')</script><script src="api.js"></script>');
 fs.copyFileSync(path.join(root, 'docs', 'api.js'), path.join(out, 'api.js'));
 fs.writeFileSync(path.join(out, 'index.html'), page('index.html', { ...snap, pdfDownload: '#pdf' }));
 fs.writeFileSync(path.join(out, 'regular.html'), page('index.html', { ...snap, agenda: reg }));

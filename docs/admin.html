@@ -39,7 +39,7 @@
   .notice.bad { background: var(--no-bg); color: var(--no); }
   .notice a { color: inherit; font-weight: 600; }
   .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--rule); margin: 8px 0 14px; overflow-x: auto; }
-  .tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 12px; font: 600 .95rem var(--sans);
+  .tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 6px; font: 600 .95rem var(--sans);
     color: var(--muted); cursor: pointer; white-space: nowrap; }
   .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
   .count { display: inline-block; min-width: 1.5em; padding: 0 6px; border-radius: 999px; background: var(--chip);
@@ -91,11 +91,12 @@
 <script>
   // The key is after '#' in the link, so it is never sent to GitHub or in a Referer header.
   var DATA = { key: (location.hash.match(/key=([A-Za-z0-9]+)/) || [])[1] || '', ward: '', bulletinUrl: './' };
-  var state = { items: [], tab: 'Pending', editing: null, dirty: false, busy: false, publishResult: null, error: '' };
+  var state = { items: [], tab: 'Pending', editing: null, dirty: false, busy: false, publishResult: null, error: '',
+    ward: { events: null, loading: false, error: '' } };
   var TABS = [
-    ['Pending', 'Needs review', function (a) { return a.status === 'Pending' || !a.status; }],
+    ['Pending', 'To review', function (a) { return a.status === 'Pending' || !a.status; }],
     ['Approved', 'Approved', function (a) { return a.status === 'Approved'; }],
-    ['Other', 'Rejected & archived', function (a) { return a.status === 'Rejected' || a.status === 'Archived'; }],
+    ['Other', 'Archived', function (a) { return a.status === 'Rejected' || a.status === 'Archived'; }],
   ];
   var $ = function (id) { return document.getElementById(id); };
 
@@ -145,6 +146,67 @@
       state.pdf = r.pdf; state.doc = r.doc;
       render(); toast('Bulletin published');
     }).catch(fail);
+  }
+
+  /* ---- Ward website tab: activities from the ward's page on churchofjesuschrist.org */
+  function loadWard() {
+    state.ward.loading = true; state.ward.error = ''; render();
+    call('adminWardEvents').then(function (r) {
+      state.ward = { events: r.events, loading: false, error: '' }; render();
+    }).catch(function (err) {
+      state.ward = { events: null, loading: false, error: (err && err.message) || String(err) }; render();
+    });
+  }
+
+  function importEvent(id) {
+    state.busy = true; render();
+    call('adminImportEvent', id).then(function (a) {
+      state.items.push(a);
+      state.ward.events.forEach(function (e) { if (e.id === id) e.added = true; });
+      state.busy = false; render();
+      toast('Added to To review. Approve it there.');
+    }).catch(fail);
+  }
+
+  function eventWhen(e) {
+    var t = function (iso) {
+      var m = /T(..):(..)/.exec(iso || '');
+      if (!m) return '';
+      var h = +m[1];
+      return (h % 12 || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
+    };
+    return fmt(e.start.slice(0, 10)) + (e.allDay ? ' · All day' : ' · ' + t(e.start) +
+      (e.end && e.end.slice(0, 10) === e.start.slice(0, 10) ? ' – ' + t(e.end) : ''));
+  }
+
+  function wardList() {
+    var w = state.ward;
+    if (w.loading) return '<div class="empty">Loading activities from the ward website…</div>';
+    if (w.error) {
+      return '<div class="notice bad">' + esc(w.error) + '</div>' +
+        '<div class="actions"><button class="btn" data-tab="Ward" data-reload="1">Try again</button></div>';
+    }
+    if (!w.events) return '';
+    if (!w.events.length) return '<div class="empty">No upcoming activities on the ward website.</div>';
+    var dis = state.busy ? ' disabled' : '';
+    return '<p class="small">Upcoming activities from the ward and stake on the ward website. ' +
+      'Adding one creates a <b>Pending</b> announcement (with date, time, and place) for you to edit and approve.</p>' +
+      w.events.map(function (e) {
+        var desc = e.description.length > 280 ? e.description.slice(0, 280) + '…' : e.description;
+        return '<article class="card">' +
+          '<div class="pills"><span class="pill live">' + esc(e.source) + '</span>' +
+            (e.audience ? '<span class="pill Archived">' + esc(e.audience) + '</span>' : '') +
+            (e.added ? '<span class="pill Approved">Added</span>' : '') + '</div>' +
+          '<h2>' + esc(e.name) + '</h2>' +
+          '<div class="when">' + esc(eventWhen(e)) + '</div>' +
+          (desc ? '<div class="details">' + esc(desc) + '</div>' : '') +
+          (e.where ? '<div class="small">' + esc(e.where) + '</div>' : '') +
+          '<div class="actions">' +
+            (e.added ? '<button class="btn" disabled>Added ✓</button>'
+              : '<button class="btn ok" data-act="import" data-id="' + esc(e.id) + '"' + dis + '>Add as announcement</button>') +
+            (e.url ? '<a class="btn" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">View ↗</a>' : '') +
+          '</div></article>';
+      }).join('');
   }
 
   function counts() {
@@ -233,11 +295,14 @@
     $('notices').innerHTML = n.join('');
 
     var c = counts();
+    var newOnSite = state.ward.events ? state.ward.events.filter(function (e) { return !e.added; }).length : '';
     $('tabs').innerHTML = TABS.map(function (t, i) {
       return '<button class="tab" role="tab" data-tab="' + t[0] + '" aria-selected="' + (state.tab === t[0]) + '">' +
         t[1] + '<span class="count">' + c[i] + '</span></button>';
-    }).join('');
+    }).join('') + '<button class="tab" role="tab" data-tab="Ward" aria-selected="' + (state.tab === 'Ward') + '">' +
+      'Ward site' + (newOnSite !== '' ? '<span class="count">' + newOnSite + '</span>' : '') + '</button>';
 
+    if (state.tab === 'Ward') { $('list').innerHTML = wardList(); return; }
     var tab = TABS.filter(function (t) { return t[0] === state.tab; })[0];
     var list = sortItems(state.items.filter(tab[2]));
     $('list').innerHTML = list.length ? list.map(card).join('')
@@ -247,7 +312,12 @@
   document.addEventListener('click', function (e) {
     var b = e.target.closest('button');
     if (!b) return;
-    if (b.dataset.tab) { state.tab = b.dataset.tab; state.editing = null; render(); return; }
+    if (b.dataset.tab) {
+      state.tab = b.dataset.tab; state.editing = null; render();
+      if (state.tab === 'Ward' && (b.dataset.reload || !state.ward.events) && !state.ward.loading) loadWard();
+      return;
+    }
+    if (b.dataset.act === 'import') { importEvent(b.dataset.id); return; }
     if (b.dataset.act === 'status') {
       var v = b.dataset.v;
       update(b.dataset.id, { status: v }, { Approved: 'Approved', Rejected: 'Rejected', Archived: 'Archived', Pending: 'Moved back to review' }[v]);

@@ -22,13 +22,15 @@ One system for the electronic and printed sacrament meeting bulletin, driven by 
 ## Weekly routine
 
 1. Ward members submit announcements. You get an email with a link to the admin page.
-2. On the admin page, **Approve** or **Reject** each item under *Needs review*. Use **Edit** to fix typos, set dates, or give it an **Order** (1, 2, 3…) to pin it to the top.
+2. On the admin page, **Approve** or **Reject** each item under *To review*. Use **Edit** to fix typos, set dates, or give it an **Order** (1, 2, 3…) to pin it to the top.
 3. When **Current Week** is final, tap **Publish bulletin**. The website updates, and a fresh PDF is made.
 4. Tap **PDF** to print, or **Edit Doc** for a last-minute tweak first.
 
 Optional: **Bulletin → Setup → Auto-publish every Saturday evening** (6 PM Arizona time). It emails you the PDF link.
 
 **Which Sundays an announcement appears:** from *Start running* through *Stop after*. If *Stop after* is blank, it runs through the *Event date*. A submission with neither date runs for one Sunday: the form fills in *Stop after* for it. To keep an item running until you **Archive** it, clear *Stop after* (and leave the event date blank) with **Edit** on the admin page. Items whose event date has passed drop off automatically.
+
+**Ward website activities:** the admin page's **Ward site** tab lists upcoming ward and stake activities from the ward's page on churchofjesuschrist.org. **Add as announcement** copies one in as a *Pending* announcement (with the date, time and place filled in) for you to edit and approve. The tab reads the same unofficial feed the ward page uses. If the Church changes it, the tab shows an error and everything else keeps working. The feed address is the **Ward Activities Feed** setting, and clearing it turns the tab off.
 
 **Standing items** (temple schedule, ward council contacts): add a row in the sheet with Status `Approved`, a high Order number, and no dates.
 
