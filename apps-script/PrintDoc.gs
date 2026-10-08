@@ -152,6 +152,7 @@ function writeAnnouncements_(cell, snap, settings, S) {
     var site = S(cell.appendParagraph('Ward website: ' + snap.wardWebsite.replace(/^https?:[/][/]/, '')),
       { size: 0.8, color: MUTED, align: A.CENTER, before: 6 });
     site.setLinkUrl(snap.wardWebsite);
+    site.editAsText().setUnderline(false).setForegroundColor(MUTED); // Docs makes links blue + underlined
   }
 }
 
