@@ -125,6 +125,9 @@
     if (d.pdfDownload) {
       h.push('<a class="btn ghost" href="' + esc(d.pdfDownload) + '" target="_blank" rel="noopener">Download PDF</a>');
     }
+    if (d.wardWebsite) {
+      h.push('<a class="btn ghost" href="' + esc(d.wardWebsite) + '" target="_blank" rel="noopener">Ward website</a>');
+    }
     h.push('</div>');
     if (d.deadline) h.push('<div>Submissions for next Sunday are due ' + esc(d.deadline) + '.</div>');
     if (d.footer) h.push('<div class="foot">' + esc(d.footer) + '</div>');

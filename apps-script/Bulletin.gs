@@ -21,7 +21,7 @@ var BULLETIN = {
 var ANNOUNCEMENT_HEADERS = ['Submitted', 'Status', 'Order', 'Title', 'Details', 'Event Date',
   'Run From', 'Run Through', 'Public Contact', 'Submitted By', 'Submitter Contact', 'Manager Notes', 'ID'];
 // Bump when SETTING_DEFAULTS or the tab layout changes; the web app then upgrades the tabs itself.
-var SETUP_VERSION = 3;
+var SETUP_VERSION = 4;
 var ANNOUNCEMENT_STATUSES = ['Pending', 'Approved', 'Rejected', 'Archived'];
 
 // Admin page field -> sheet column, with the longest text allowed.
@@ -32,13 +32,17 @@ var ADMIN_FIELDS = {
 };
 
 // Values an upgrade may overwrite because they were earlier defaults, not choices.
-var REPLACED_DEFAULTS = { 'Print Link': ['tinyurl.com/ahwatukee-groves-bulletin'] };
+var REPLACED_DEFAULTS = {
+  'Print Link': ['tinyurl.com/ahwatukee-groves-bulletin'],
+  'Meeting Time': ['11:15 AM'],
+};
 
 var SETTING_DEFAULTS = [
   ['Ward Name', 'Ahwatukee Groves Ward', 'Shown at the top of both bulletins'],
   ['Stake Name', 'Tempe Arizona West Stake', 'Shown under the ward name (blank = leave off)'],
   ['Classes Time', '10:00 AM', 'When Sunday School / classes start (blank = leave off)'],
-  ['Meeting Time', '11:15 AM', 'When sacrament meeting starts'],
+  ['Meeting Time', '11:10 AM', 'When sacrament meeting starts'],
+  ['Ward Website', 'https://local.churchofjesuschrist.org/en/units/us/az/ahwatukee-groves-ward', 'Linked from both bulletins (blank = leave off)'],
   ['Location', '', 'Building name or address (optional)'],
   ['Presiding', '', 'Optional. Leave blank to leave the Presiding line off'],
   ['Notify Email', '', 'Gets an email for each new submission. Blank = no email'],
@@ -404,6 +408,7 @@ function buildSnapshot_(ss, settings) {
     stake: String(settings['Stake Name'] || ''),
     meetingTime: String(settings['Meeting Time'] || ''),
     classesTime: String(settings['Classes Time'] || ''),
+    wardWebsite: String(settings['Ward Website'] || ''),
     location: String(settings['Location'] || ''),
     footer: String(settings['Footer'] || ''),
     deadline: String(settings['Submission Deadline'] || ''),

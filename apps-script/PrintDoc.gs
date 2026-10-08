@@ -147,6 +147,12 @@ function writeAnnouncements_(cell, snap, settings, S) {
     }
   }
   if (settings['Print Link']) S(cell.appendParagraph(link), { size: 0.85, align: A.CENTER });
+  if (snap.wardWebsite) {
+    // Printed without "https://" to save space; it's still a clickable link in the PDF.
+    var site = S(cell.appendParagraph('Ward website: ' + snap.wardWebsite.replace(/^https?:[/][/]/, '')),
+      { size: 0.8, color: MUTED, align: A.CENTER, before: 6 });
+    site.setLinkUrl(snap.wardWebsite);
+  }
 }
 
 /** rows: [label, value, boldPrefixLength?, prefixLinkUrl?]. Label left, value right-aligned. */
