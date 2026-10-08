@@ -289,8 +289,11 @@
     if (state.dirty) n.push('<div class="notice warn">Changes are saved. They appear on the bulletin after you <b>Publish</b>.</div>');
     if (state.publishResult) {
       var r = state.publishResult;
+      var cut = r.printed != null && r.printed < r.count
+        ? ' The printed page fits ' + r.printed + ' of them; the rest are online only (latest dates dropped first).' : '';
+      var long = r.pages > 1 ? ' The program alone is longer than one page; lower Print Font Size in Settings.' : '';
       n.push('<div class="notice good">Published for ' + esc(r.dateLabel) + ' with ' + r.count + ' announcement' +
-        (r.count === 1 ? '' : 's') + '. <a href="' + esc(r.web) + '" target="_blank" rel="noopener noreferrer">Bulletin</a> · ' +
+        (r.count === 1 ? '' : 's') + '.' + esc(cut + long) + ' <a href="' + esc(r.web) + '" target="_blank" rel="noopener noreferrer">Bulletin</a> · ' +
         '<a href="' + esc(r.pdf) + '" target="_blank" rel="noopener noreferrer">PDF to print</a> · ' +
         '<a href="' + esc(r.doc) + '" target="_blank" rel="noopener noreferrer">Edit Doc</a></div>');
     }

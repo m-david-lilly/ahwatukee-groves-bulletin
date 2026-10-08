@@ -216,7 +216,10 @@ function publish_(toWeb) {
       files = createPrintBulletin_(snap, settings);
     } finally {
       // Publish the web version even if the print step fails; it just won't offer a PDF.
-      if (files) { snap.pdf = files.pdf; snap.pdfDownload = files.pdfDownload; snap.doc = files.doc; }
+      if (files) {
+        snap.pdf = files.pdf; snap.pdfDownload = files.pdfDownload; snap.doc = files.doc;
+        snap.printed = files.printed; snap.pages = files.pages;
+      }
       if (toWeb) savePublished_(ss, snap);
     }
     return { snap: snap, doc: files.doc, pdf: files.pdf, web: siteUrl_(settings) };
@@ -248,7 +251,7 @@ function autoPublishBulletin() {
     MailApp.sendEmail(to, 'Bulletin published for ' + r.snap.dateLabel,
       'The bulletin was published automatically.\n\n' +
       'Electronic: ' + r.web + '\nPrintable Doc: ' + r.doc + '\nPDF: ' + r.pdf + '\n\n' +
-      r.snap.announcements.length + ' announcement(s) included.');
+      r.snap.announcements.length + ' announcement(s) online, ' + r.snap.printed + ' fit on the printed page.');
   }
 }
 
@@ -622,8 +625,8 @@ function cleanAdminValue_(field, v, max) {
 function adminPublish(key) {
   requireAdmin_(key);
   var r = publish_(true);
-  return { dateLabel: r.snap.dateLabel, count: r.snap.announcements.length, web: r.web, doc: r.doc, pdf: r.pdf,
-    publishedAt: r.snap.publishedAt };
+  return { dateLabel: r.snap.dateLabel, count: r.snap.announcements.length, printed: r.snap.printed,
+    pages: r.snap.pages, web: r.web, doc: r.doc, pdf: r.pdf, publishedAt: r.snap.publishedAt };
 }
 
 /* ------------------------------------------------ ward website activities */

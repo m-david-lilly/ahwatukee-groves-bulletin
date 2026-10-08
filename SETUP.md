@@ -39,7 +39,7 @@ Optional: **Bulletin → Setup → Auto-publish every Saturday evening** (6 PM A
 - **The admin link is the password.** Anyone with it can approve and publish. The key sits after `#` in the link, so it's never sent to GitHub. If it gets around, use **Bulletin → Setup → Reset admin link**; the old one stops working immediately.
 - **The website shows the last *published* bulletin.** Phones also keep the last bulletin they loaded, so it still opens on weak chapel Wi-Fi.
 - **The PDF is public** ("anyone with the link can view") so the Download button works. The editable Doc stays private.
-- **Page overflow:** on a busy week, lower **Print Font Size** to 10, or edit the Doc by hand.
+- **Order and page fit:** announcements are listed chronologically (soonest event first; undated items last, by **Order**). The printed bulletin always fits on one page: if they don't all fit, the ones with the latest dates are left off the paper copy, with a "+ N more announcements online" line. The website always shows all of them, and the admin page says how many made it onto paper. To fit more, lower **Print Font Size** to 10 or shorten long announcements.
 - **Prayers:** a blank or N/A Invocation or Benediction shows **By Invitation**.
 - **Hymn links** open the hymn in Gospel Library. New hymns released later need adding to `apps-script/HymnLinks.gs`.
 - **Fast Sunday** is detected automatically. Speakers become *Bearing of Testimonies*, and the intermediate hymn is dropped.

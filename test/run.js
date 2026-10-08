@@ -81,8 +81,14 @@ const ann = [
     eventDate: '2026-10-17', runFrom: '', runThrough: '', contact: 'Brother Earl' },
 ];
 const picked = selectAnnouncements(ann, '2026-10-11');
-assert.strictEqual(picked.map((a) => a.title).join(' | '), 'Temple Night | Youth Service Project | Trunk-or-Treat');
-assert.strictEqual(picked[2].when, 'Friday, October 30');
+assert.strictEqual(picked.map((a) => a.title).join(' | '), 'Youth Service Project | Temple Night | Trunk-or-Treat'); // by event date
+const undated = selectAnnouncements([
+  { status: 'Approved', title: 'Temple schedule', details: 'x', order: 2 },
+  { status: 'Approved', title: 'Ward contacts', details: 'x', order: 1 },
+  { status: 'Approved', title: 'Fall festival', details: 'x', eventDate: '2026-10-24' },
+], '2026-10-11');
+assert.strictEqual(undated.map((a) => a.title).join(' | '), 'Fall festival | Ward contacts | Temple schedule'); // undated last, by Order
+assert.strictEqual(picked[2].when, 'Friday, October 30'); // Trunk-or-Treat is still last
 assert.strictEqual(selectAnnouncements(ann, '2026-10-31').map((a) => a.title).join(), 'Starts later'); // no end date: runs until archived
 
 assert.strictEqual(scheduleLine('10:00 AM', '11:15 AM'), 'Classes 10:00 AM  ·  Sacrament Meeting 11:15 AM');

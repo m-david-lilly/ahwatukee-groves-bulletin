@@ -170,12 +170,14 @@ function isAnnouncementActive(a, sundayYmd) {
  */
 function selectAnnouncements(rows, sundayYmd) {
   var picked = rows.filter(function (a) { return isAnnouncementActive(a, sundayYmd); });
+  // Chronological: soonest event first, undated items last. Order only breaks ties
+  // (same date, or among undated items).
   picked.sort(function (a, b) {
+    var ea = a.eventDate || '9999', eb = b.eventDate || '9999';
+    if (ea !== eb) return ea < eb ? -1 : 1;
     var oa = a.order === '' || a.order == null ? Infinity : Number(a.order);
     var ob = b.order === '' || b.order == null ? Infinity : Number(b.order);
     if (oa !== ob) return oa - ob;
-    var ea = a.eventDate || '9999', eb = b.eventDate || '9999';
-    if (ea !== eb) return ea < eb ? -1 : 1;
     return cleanValue(a.title) < cleanValue(b.title) ? -1 : 1;
   });
   return picked.map(function (a) {

@@ -12,12 +12,83 @@ var INK = '#1f2a37';
 var MUTED = '#5f6b7a';
 
 function createPrintBulletin_(snap, settings) {
-  var font = String(settings['Print Font'] || 'Georgia');
-  var size = Number(settings['Print Font Size']) || 11;
   var folder = folder_(String(settings['Bulletin Folder'] || 'Ward Bulletins'));
   var name = 'Bulletin ' + snap.sundayYmd;
-
   var doc = reuseOrCreateDoc_(folder, name);
+  var id = doc.getId();
+  doc.saveAndClose();
+  var qr = qrBlob_(settings);
+  var all = snap.announcements;
+
+  // Docs can't report where pages break, so build, export, and count pages. If the bulletin
+  // spills onto a second page, drop announcements from the end (the list is chronological,
+  // so the furthest-out ones go first) until it fits. Binary search keeps this to a few passes.
+  var cache = {};
+  var lastDrawn = -1; // the Doc itself must end up matching the PDF we keep
+  function draw(n) {
+    renderBulletin_(DocumentApp.openById(id), snap, settings, all.slice(0, n), all.length - n, qr);
+    lastDrawn = n;
+    return (cache[n] = DriveApp.getFileById(id).getAs('application/pdf'));
+  }
+  function pdfFor(n) { return cache[n] || draw(n); }
+  var shown = all.length;
+  if (pdfPages_(pdfFor(shown)) > 1) {
+    var lo = 0, hi = shown - 1; // largest count that fits is in [lo, hi]; 0 is kept even if it overflows
+    while (lo < hi) {
+      var mid = Math.ceil((lo + hi) / 2);
+      if (pdfPages_(pdfFor(mid)) <= 1) lo = mid; else hi = mid - 1;
+    }
+    shown = lo;
+  }
+  var blob = lastDrawn === shown ? cache[shown] : draw(shown);
+
+  var pdfName = name + '.pdf';
+  var old = folder.getFilesByName(pdfName);
+  while (old.hasNext()) old.next().setTrashed(true); // replaced by the fresh copy below
+  var pdf = folder.createFile(blob.setName(pdfName));
+  // The PDF is offered on the public bulletin page, so anyone with the link may view/download it.
+  // The editable Doc stays private.
+  try {
+    pdf.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {
+    console.warn('Could not share the PDF publicly: ' + e);
+  }
+
+  return {
+    doc: doc.getUrl(),
+    pdf: pdf.getUrl(),
+    pdfDownload: 'https://drive.google.com/uc?export=download&id=' + pdf.getId(),
+    printed: shown,
+    pages: pdfPages_(blob),
+  };
+}
+
+/** Number of pages in a PDF blob (Google's exports list each page as a plain /Type /Page object). */
+function pdfPages_(blob) {
+  var m = blob.getDataAsString('ISO-8859-1').match(/\/Type\s*\/Page(?!s)/g);
+  return m ? m.length : 1;
+}
+
+function qrBlob_(settings) {
+  var link = String(settings['Print Link'] || settings['Site URL'] || '').trim();
+  if (!link || !/^y/i.test(String(settings['Print QR Code'] || 'Yes'))) return null;
+  // The QR code uses the full https address: phone cameras reliably open it as a link,
+  // and it keeps working even if the short-link service goes away.
+  var target = String(settings['Site URL'] || link).trim();
+  if (!/^https?:/i.test(target)) target = 'https://' + target;
+  try {
+    return UrlFetchApp.fetch('https://quickchart.io/qr?size=300&margin=1&text=' +
+      encodeURIComponent(target)).getBlob();
+  } catch (e) {
+    console.warn('QR code skipped: ' + e);
+    return null;
+  }
+}
+
+/** Draws the whole bulletin into the (cleared) Doc and saves it. */
+function renderBulletin_(doc, snap, settings, announcements, hiddenCount, qr) {
+  var font = String(settings['Print Font'] || 'Georgia');
+  var size = Number(settings['Print Font Size']) || 11;
   var body = doc.getBody();
   body.clear();
   body.setPageWidth(PAGE_W).setPageHeight(PAGE_H)
@@ -39,28 +110,10 @@ function createPrintBulletin_(snap, settings) {
   right.setPaddingLeft(GUTTER / 2).setPaddingRight(0);
 
   writeAgenda_(left, snap, S, colW - GUTTER / 2);
-  writeAnnouncements_(right, snap, settings, S);
+  writeAnnouncements_(right, snap, settings, S, announcements, hiddenCount, qr);
 
   S(body.appendParagraph(''), { size: 1 }); // Docs requires a paragraph after a table
   doc.saveAndClose();
-
-  var pdfName = name + '.pdf';
-  var old = folder.getFilesByName(pdfName);
-  while (old.hasNext()) old.next().setTrashed(true); // replaced by the fresh copy below
-  var pdf = folder.createFile(DriveApp.getFileById(doc.getId()).getAs('application/pdf').setName(pdfName));
-  // The PDF is offered on the public bulletin page, so anyone with the link may view/download it.
-  // The editable Doc stays private.
-  try {
-    pdf.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {
-    console.warn('Could not share the PDF publicly: ' + e);
-  }
-
-  return {
-    doc: doc.getUrl(),
-    pdf: pdf.getUrl(),
-    pdfDownload: 'https://drive.google.com/uc?export=download&id=' + pdf.getId(),
-  };
 }
 
 function writeAgenda_(cell, snap, S, width) {
@@ -109,42 +162,36 @@ function writeAgenda_(cell, snap, S, width) {
   }
 }
 
-function writeAnnouncements_(cell, snap, settings, S) {
+function writeAnnouncements_(cell, snap, settings, S, announcements, hiddenCount, qr) {
   var A = DocumentApp.HorizontalAlignment;
   var heading = cell.getChild(0).asParagraph();
   heading.setText('Announcements');
   S(heading, { size: 1.6, bold: true, align: A.CENTER, after: 2 });
   rule_(cell, S);
 
-  if (!snap.announcements.length) {
+  var link = String(settings['Print Link'] || settings['Site URL'] || '').trim();
+  if (!announcements.length && !hiddenCount) {
     S(cell.appendParagraph('No announcements this week.'), { italic: true, color: MUTED, align: A.CENTER });
   }
-  snap.announcements.forEach(function (n) {
+  announcements.forEach(function (n) {
     S(cell.appendParagraph(n.title), { size: 1.05, bold: true, before: 4, after: 1 });
     if (n.when) S(cell.appendParagraph(n.when), { size: 0.9, italic: true, color: MUTED, after: 1 });
     if (n.details) S(cell.appendParagraph(n.details), { size: 0.95, after: 1, line: 1.05 });
     if (n.contact) S(cell.appendParagraph('Contact: ' + n.contact), { size: 0.85, color: MUTED, after: 4 });
   });
+  if (hiddenCount) {
+    S(cell.appendParagraph('+ ' + hiddenCount + ' more announcement' + (hiddenCount === 1 ? '' : 's') +
+      ' online' + (link ? ' at ' + link : '')), { size: 0.9, italic: true, align: A.CENTER, before: 6 });
+  }
 
-  var link = String(settings['Print Link'] || settings['Site URL'] || '').trim();
   if (!link) return;
   rule_(cell, S);
   var note = 'Find this bulletin online and submit announcements' +
     (snap.deadline ? ' (due ' + snap.deadline + ')' : '') + ':';
   S(cell.appendParagraph(note), { size: 0.85, color: MUTED, align: A.CENTER, after: 2 });
-  if (/^y/i.test(String(settings['Print QR Code'] || 'Yes'))) {
-    try {
-      // The QR code uses the full https address: phone cameras reliably open it as a link,
-      // and it keeps working even if the short-link service goes away.
-      var target = String(settings['Site URL'] || link).trim();
-      if (!/^https?:/i.test(target)) target = 'https://' + target;
-      var qr = UrlFetchApp.fetch('https://quickchart.io/qr?size=300&margin=1&text=' +
-        encodeURIComponent(target)).getBlob();
-      var p = S(cell.appendParagraph(''), { align: A.CENTER, after: 2 });
-      p.appendInlineImage(qr).setWidth(72).setHeight(72);
-    } catch (e) {
-      console.warn('QR code skipped: ' + e);
-    }
+  if (qr) {
+    var p = S(cell.appendParagraph(''), { align: A.CENTER, after: 2 });
+    p.appendInlineImage(qr.copyBlob()).setWidth(72).setHeight(72);
   }
   if (settings['Print Link']) S(cell.appendParagraph(link), { size: 0.85, align: A.CENTER });
   if (snap.wardWebsite) {
