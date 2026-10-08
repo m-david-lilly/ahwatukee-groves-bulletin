@@ -134,8 +134,12 @@ function writeAnnouncements_(cell, snap, settings, S) {
   S(cell.appendParagraph(note), { size: 0.85, color: MUTED, align: A.CENTER, after: 2 });
   if (/^y/i.test(String(settings['Print QR Code'] || 'Yes'))) {
     try {
+      // The QR code uses the full https address: phone cameras reliably open it as a link,
+      // and it keeps working even if the short-link service goes away.
+      var target = String(settings['Site URL'] || link).trim();
+      if (!/^https?:/i.test(target)) target = 'https://' + target;
       var qr = UrlFetchApp.fetch('https://quickchart.io/qr?size=300&margin=1&text=' +
-        encodeURIComponent(link)).getBlob();
+        encodeURIComponent(target)).getBlob();
       var p = S(cell.appendParagraph(''), { align: A.CENTER, after: 2 });
       p.appendInlineImage(qr).setWidth(72).setHeight(72);
     } catch (e) {
