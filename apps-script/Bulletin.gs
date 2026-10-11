@@ -19,15 +19,17 @@ var BULLETIN = {
 };
 
 var ANNOUNCEMENT_HEADERS = ['Submitted', 'Status', 'Order', 'Title', 'Details', 'Event Date',
-  'Run From', 'Run Through', 'Public Contact', 'Submitted By', 'Submitter Contact', 'Manager Notes', 'ID', 'Source'];
+  'Run From', 'Run Through', 'Public Contact', 'Submitted By', 'Submitter Contact', 'Manager Notes', 'ID', 'Source',
+  'Start Time', 'End Time'];
 // Bump when SETTING_DEFAULTS or the tab layout changes; the web app then upgrades the tabs itself.
-var SETUP_VERSION = 5;
+var SETUP_VERSION = 6;
 var ANNOUNCEMENT_STATUSES = ['Pending', 'Approved', 'Rejected', 'Archived'];
 
 // Admin page field -> sheet column, with the longest text allowed.
 var ADMIN_FIELDS = {
   status: ['Status'], order: ['Order'], title: ['Title', 120], details: ['Details', 3000],
-  eventDate: ['Event Date'], runFrom: ['Run From'], runThrough: ['Run Through'],
+  eventDate: ['Event Date'], startTime: ['Start Time'], endTime: ['End Time'],
+  runFrom: ['Run From'], runThrough: ['Run Through'],
   contact: ['Public Contact', 120], notes: ['Manager Notes', 500],
 };
 
@@ -134,7 +136,12 @@ function setupTabs_(ss) {
   ann.getRange(2, 1, rows, 1).setNumberFormat('m/d/yyyy h:mm am/pm');
   ann.getRange(2, 6, rows, 3).setNumberFormat('ddd m/d/yyyy');
   ann.getRange(2, 5, rows, 1).setWrap(true);
-  [140, 95, 55, 220, 380, 115, 115, 115, 160, 140, 160, 200, 80].forEach(function (w, i) {
+  // Times stay plain text ("19:00"); otherwise Sheets turns them into 1899 date-times.
+  var times = headerIndex_(ann);
+  ['Start Time', 'End Time'].forEach(function (h) {
+    if (h in times) ann.getRange(2, times[h] + 1, rows, 1).setNumberFormat('@');
+  });
+  [140, 95, 55, 220, 380, 115, 115, 115, 160, 140, 160, 200, 80, 120, 80, 80].forEach(function (w, i) {
     ann.setColumnWidth(i + 1, w);
   });
   var status = ann.getRange(2, 2, rows, 1);
@@ -336,6 +343,8 @@ function submitAnnouncement(f) {
     title: text(f.title, 120),
     details: text(f.details, 1500),
     eventDate: date(f.eventDate),
+    startTime: hhmm_(f.startTime),
+    endTime: hhmm_(f.endTime),
     runFrom: date(f.runFrom),
     runThrough: date(f.runThrough),
     contact: text(f.publicContact, 120),
@@ -345,6 +354,9 @@ function submitAnnouncement(f) {
   if (!a.title || !a.details || !a.name || !a.reach) {
     throw new Error('Please fill in the title, details, your name, and how to reach you.');
   }
+  if (!a.eventDate) { a.startTime = ''; a.endTime = ''; } // times only mean something with a date
+  if (a.endTime && !a.startTime) throw new Error('Please add a start time, or leave both times blank.');
+  if (a.startTime && a.endTime && a.endTime < a.startTime) throw new Error('The end time must be after the start time.');
   if (a.runFrom && a.runThrough && a.runThrough < a.runFrom) {
     throw new Error('"Stop running after" must be on or after "Start running".');
   }
@@ -364,6 +376,8 @@ function submitAnnouncement(f) {
     put('Title', noFormula_(a.title));
     put('Details', noFormula_(a.details));
     put('Event Date', a.eventDate);
+    put('Start Time', a.startTime);
+    put('End Time', a.endTime);
     put('Run From', a.runFrom);
     put('Run Through', a.runThrough);
     put('Public Contact', noFormula_(a.contact));
@@ -446,6 +460,8 @@ function rowToAnnouncement_(r, col, tz) {
     title: String(get('Title')),
     details: String(get('Details')),
     eventDate: toYmd_(get('Event Date'), tz),
+    startTime: hhmm_(get('Start Time'), tz),
+    endTime: hhmm_(get('End Time'), tz),
     runFrom: toYmd_(get('Run From'), tz),
     runThrough: toYmd_(get('Run Through'), tz),
     contact: String(get('Public Contact')),
@@ -614,6 +630,10 @@ function cleanAdminValue_(field, v, max) {
     if (!/^\d{1,3}$/.test(v)) throw new Error('Order must be a whole number (1, 2, 3…) or blank.');
     return Number(v);
   }
+  if (field === 'startTime' || field === 'endTime') {
+    if (v && !/^\d{1,2}:\d{2}$/.test(v)) throw new Error('Times must look like 19:00.');
+    return hhmm_(v);
+  }
   if (/date|run/i.test(field)) {
     if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new Error('Dates must look like 2026-10-11.');
     return v;
@@ -689,6 +709,8 @@ function adminImportEvent(key, id) {
     put('Title', noFormula_(ev.name));
     put('Details', noFormula_(eventAnnouncementDetails(ev)));
     put('Event Date', ev.start.slice(0, 10));
+    put('Start Time', eventTimes(ev).start);
+    put('End Time', eventTimes(ev).end);
     put('Run From', nextSundayYmd(todayYmd_(ss)));
     put('Submitted By', ev.source + ' website');
     put('Manager Notes', ev.url ? 'From ' + ev.url : 'From the ward website');
@@ -762,6 +784,16 @@ function toYmd_(v, tz) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   var d = new Date(s.replace(/^[A-Za-z]+,\s*(?=[A-Za-z])/, '')); // drop a leading weekday
   return isNaN(d) ? '' : Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+}
+
+/** "19:00" from a sheet value or form text: a time-of-day Date, "7:00 PM", "19:00", or blank. */
+function hhmm_(v, tz) {
+  if (v instanceof Date && !isNaN(v)) return Utilities.formatDate(v, tz || 'America/Phoenix', 'HH:mm');
+  var m = String(v == null ? '' : v).trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);
+  if (!m) return '';
+  var h = Number(m[1]) % (m[3] ? 12 : 24);
+  if (m[3] && /p/i.test(m[3])) h += 12;
+  return (h < 10 ? '0' : '') + h + ':' + m[2];
 }
 
 function todayYmd_(ss) {

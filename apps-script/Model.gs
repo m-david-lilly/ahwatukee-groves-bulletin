@@ -184,7 +184,7 @@ function selectAnnouncements(rows, sundayYmd) {
     return {
       title: cleanValue(a.title),
       details: String(a.details == null ? '' : a.details).trim(),
-      when: a.eventDate ? formatYmd(a.eventDate, 'long') : '',
+      when: a.eventDate ? formatYmd(a.eventDate, 'long') + (timeRange(a.startTime, a.endTime) ? ' · ' + timeRange(a.startTime, a.endTime) : '') : '',
       contact: cleanValue(a.contact),
     };
   });
@@ -282,19 +282,38 @@ function wardFeedEvents(feed, todayYmd) {
 /** "7:00 PM" from "2026-10-28T19:00". */
 function clockTime(isoLocal) {
   var m = String(isoLocal).match(/T(\d{2}):(\d{2})/);
+  return m ? timeLabel(m[1] + ':' + m[2]) : '';
+}
+
+/** "7:00 PM" from "19:00" (or "" if it isn't a time). */
+function timeLabel(hhmm) {
+  var m = String(hhmm == null ? '' : hhmm).match(/^(\d{1,2}):(\d{2})/);
   if (!m) return '';
   var h = Number(m[1]);
   return (h % 12 || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
 }
 
+/** "7:00 PM – 8:30 PM", "7:00 PM", or "" for an announcement's optional From/To times. */
+function timeRange(start, end) {
+  var a = timeLabel(start), b = timeLabel(end);
+  if (!a) return '';
+  return b && b !== a ? a + ' – ' + b : a;
+}
+
 /** When/where lines plus the description, ready for an announcement's Details. */
 function eventAnnouncementDetails(ev) {
-  var when = ev.allDay ? 'All day'
-    : clockTime(ev.start) + (ev.end && ev.end.slice(0, 10) === ev.start.slice(0, 10) ? ' – ' + clockTime(ev.end) : '');
   var lines = [];
-  if (when) lines.push('Time: ' + when);
+  if (ev.allDay) lines.push('All day');
   if (ev.where) lines.push('Where: ' + ev.where);
   if (ev.audience && ev.audience !== 'Everyone') lines.push('For: ' + ev.audience);
   if (ev.description) lines.push('', ev.description);
   return lines.join(String.fromCharCode(10)).slice(0, 1500);
+}
+
+/** Start/end "HH:mm" for a feed activity (blank for all-day or multi-day ones). */
+function eventTimes(ev) {
+  if (ev.allDay) return { start: '', end: '' };
+  var start = String(ev.start).slice(11, 16);
+  var end = ev.end && ev.end.slice(0, 10) === ev.start.slice(0, 10) ? String(ev.end).slice(11, 16) : '';
+  return { start: start, end: end };
 }

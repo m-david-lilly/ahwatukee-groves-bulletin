@@ -27,6 +27,8 @@
   .hint { display: block; font-weight: 400; color: var(--muted); font-size: .84rem; }
   .opt { font-weight: 400; color: var(--muted); }
   .note { margin: 10px 0 0; }
+  #times { grid-template-columns: 1fr 1fr; } /* From/To stay side by side, even on phones */
+  #times label { margin-top: 10px; }
   input, textarea { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--rule);
     border-radius: 10px; padding: 11px 12px; }
   input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -62,6 +64,10 @@
 
     <label for="e">Event date <span class="hint">Optional. The announcement comes down after this date.</span></label>
     <input id="e" name="eventDate" type="date">
+    <div class="row" id="times">
+      <div><label for="st">From <span class="opt">(optional)</span></label><input id="st" name="startTime" type="time"></div>
+      <div><label for="et">To <span class="opt">(optional)</span></label><input id="et" name="endTime" type="time"></div>
+    </div>
 
     <label for="pc">Contact to print <span class="hint">Optional. Shown in the bulletin, e.g. "Sister Jones, 555-0123"</span></label>
     <input id="pc" name="publicContact" maxlength="120">
@@ -126,13 +132,32 @@
     applyInfo();
   }).catch(function () { /* the form still works with the defaults */ });
 
+  // "Stop running after" follows the event date until the person changes it themselves.
+  var stopFollowsEvent = true;
   function resetDates() {
     $('rf').value = DATA.nextSunday; $('rt').value = '';
     $('rf').min = $('rt').min = $('e').min = DATA.nextSunday;
+    stopFollowsEvent = true;
+    syncTimes();
+  }
+  function syncStop() {
+    if (!stopFollowsEvent) return;
+    var v = $('e').value;
+    // Date boxes report half-typed dates (year "0002") while typing; only copy real ones.
+    if (!v) $('rt').value = '';
+    else if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v) && v >= DATA.nextSunday) $('rt').value = v;
+  }
+  function syncTimes() {
+    var on = !!$('e').value;
+    $('st').disabled = $('et').disabled = !on;
+    $('times').style.opacity = on ? '' : '.5';
   }
   resetDates();
   $('d').addEventListener('input', function () { $('dc').textContent = this.value.length + ' / 1500'; });
-  $('e').addEventListener('change', function () { if (!$('rt').value) $('rt').value = this.value; });
+  ['input', 'change', 'blur'].forEach(function (ev) {
+    $('e').addEventListener(ev, function () { syncStop(); syncTimes(); });
+  });
+  $('rt').addEventListener('input', function () { stopFollowsEvent = false; });
 
   function showErr(msg) { $('err').textContent = msg; $('err').hidden = !msg; }
 
@@ -142,6 +167,10 @@
     Array.prototype.forEach.call(f.elements, function (el) { if (el.name) data[el.name] = el.value.trim(); });
     if (!data.title || !data.details || !data.name || !data.reach) {
       return showErr('Please fill in the title, details, your name, and how to reach you.');
+    }
+    if (data.endTime && !data.startTime) return showErr('Please add a "From" time, or leave both times blank.');
+    if (data.startTime && data.endTime && data.endTime < data.startTime) {
+      return showErr('The "To" time must be after the "From" time.');
     }
     if (data.runFrom && data.runThrough && data.runThrough < data.runFrom) {
       return showErr('"Stop running after" must be on or after "Start running".');

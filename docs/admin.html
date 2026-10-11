@@ -181,6 +181,17 @@
       (e.end && e.end.slice(0, 10) === e.start.slice(0, 10) ? ' – ' + t(e.end) : ''));
   }
 
+  function clock(hhmm) {
+    var m = /^(..):(..)/.exec(hhmm || '');
+    if (!m) return '';
+    var h = +m[1];
+    return (h % 12 || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
+  }
+  function times(start, end) {
+    if (!start) return '';
+    return ' · ' + clock(start) + (end && end !== start ? ' – ' + clock(end) : '');
+  }
+
   function wardList() {
     var w = state.ward;
     if (w.loading) return '<div class="empty">Loading activities from the ward website…</div>';
@@ -244,7 +255,7 @@
         (a.live ? '<span class="pill live">In ' + esc(fmt(state.sunday)) + ' bulletin</span>' : '') +
         (a.order !== '' ? '<span class="pill live">Order ' + esc(a.order) + '</span>' : '') + '</div>' +
       '<h2>' + esc(a.title) + '</h2>' +
-      (a.eventDate ? '<div class="when">' + esc(fmt(a.eventDate)) + '</div>' : '') +
+      (a.eventDate ? '<div class="when">' + esc(fmt(a.eventDate) + times(a.startTime, a.endTime)) + '</div>' : '') +
       '<div class="details">' + esc(a.details) + '</div>' +
       (a.contact ? '<div class="small">Printed contact: ' + esc(a.contact) + '</div>' : '') +
       '<div class="small">' + esc(runs) + '</div>' +
@@ -267,7 +278,9 @@
         field('order', 'Order', a.order, 'number', ' min="1" max="999"') + '</div>' +
       '<label for="f-details">Details</label><textarea id="f-details" name="details" maxlength="3000">' + esc(a.details) + '</textarea>' +
       '<div class="row3">' + field('eventDate', 'Event date', a.eventDate, 'date') +
-        field('runFrom', 'Start running', a.runFrom, 'date') + field('runThrough', 'Stop after', a.runThrough, 'date') + '</div>' +
+        field('startTime', 'From', a.startTime, 'time') + field('endTime', 'To', a.endTime, 'time') + '</div>' +
+      '<div class="row3">' + field('runFrom', 'Start running', a.runFrom, 'date') +
+        field('runThrough', 'Stop after', a.runThrough, 'date') + '</div>' +
       field('contact', 'Printed contact', a.contact, 'text', ' maxlength="120"') +
       field('notes', 'Private notes', a.notes, 'text', ' maxlength="500"') +
       '<div class="actions"><button class="btn primary" type="submit"' + (state.busy ? ' disabled' : '') + '>Save</button>' +
@@ -332,10 +345,12 @@
   document.addEventListener('submit', function (e) {
     e.preventDefault();
     var f = e.target, ch = {};
-    ['title', 'order', 'details', 'eventDate', 'runFrom', 'runThrough', 'contact', 'notes'].forEach(function (k) {
+    ['title', 'order', 'details', 'eventDate', 'startTime', 'endTime', 'runFrom', 'runThrough', 'contact', 'notes'].forEach(function (k) {
       ch[k] = f.elements[k].value.trim();
     });
     if (!ch.title) { state.error = 'The title cannot be empty.'; return render(); }
+    if (ch.endTime && !ch.startTime) { state.error = 'Add a "From" time, or leave both times blank.'; return render(); }
+    if (ch.startTime && ch.endTime && ch.endTime < ch.startTime) { state.error = 'The "To" time must be after "From".'; return render(); }
     if (ch.runFrom && ch.runThrough && ch.runThrough < ch.runFrom) {
       state.error = '"Stop after" must be on or after "Start running".'; return render();
     }

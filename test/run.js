@@ -12,7 +12,7 @@ for (const f of ['HymnLinks.gs', 'Model.gs']) {
   vm.runInContext(fs.readFileSync(path.join(root, 'apps-script', f), 'utf8'), ctx);
 }
 const { buildAgenda, selectAnnouncements, parseHymn, formatYmd, nextSundayYmd, scheduleLine, defaultRunThrough,
-  wardFeedEvents, eventAnnouncementDetails, clockTime } = ctx;
+  wardFeedEvents, eventAnnouncementDetails, clockTime, timeRange, eventTimes } = ctx;
 
 // "Current Week" tab as it looked on 2026-10-07 (a Fast Sunday).
 const fastRows = [
@@ -126,8 +126,16 @@ assert.strictEqual(evs[2].audience, 'Youth girls, Youth boys');
 assert.strictEqual(clockTime('2026-10-28T19:00'), '7:00 PM');
 assert.strictEqual(clockTime('2026-10-28T00:30'), '12:30 AM');
 assert.strictEqual(eventAnnouncementDetails(evs[1]).split(String.fromCharCode(10)).join(' / '),
-  'Time: 7:00 PM – 8:00 PM / Where: 1050 West Grove Parkway, Tempe /  / Meet at the temple.');
-assert.strictEqual(eventAnnouncementDetails(evs[0]), 'Time: All day');
+  'Where: 1050 West Grove Parkway, Tempe /  / Meet at the temple.');
+assert.strictEqual(eventAnnouncementDetails(evs[0]), 'All day');
+assert.strictEqual(JSON.stringify(eventTimes(evs[1])), '{"start":"19:00","end":"20:00"}');
+assert.strictEqual(JSON.stringify(eventTimes(evs[0])), '{"start":"","end":""}');
+assert.strictEqual(timeRange('19:00', '20:30'), '7:00 PM – 8:30 PM');
+assert.strictEqual(timeRange('9:05', ''), '9:05 AM');
+assert.strictEqual(timeRange('', '20:30'), '');
+const timed = selectAnnouncements([{ status: 'Approved', title: 'Dance', details: 'x', eventDate: '2026-10-28',
+  startTime: '19:00', endTime: '20:30' }], '2026-10-11');
+assert.strictEqual(timed[0].when, 'Wednesday, October 28 · 7:00 PM – 8:30 PM');
 assert.throws(() => wardFeedEvents({}, '2026-10-08'), /no unit data/);
 if (process.env.WARD_FEED) { // optional smoke test against a saved copy of the real feed
   const real = wardFeedEvents(JSON.parse(fs.readFileSync(process.env.WARD_FEED, 'utf8')), '2026-10-08');
