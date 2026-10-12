@@ -7,7 +7,9 @@
 var PAGE_W = 792;   // 11in in points
 var PAGE_H = 612;   // 8.5in
 var MARGIN = 36;    // 0.5in
-var GUTTER = 36;    // space between the two columns
+// The page is printed double-sided and cut down the middle into two 5.5 x 8.5 in halves.
+// A gutter of twice the margin gives each half the same 0.5 in border on all four sides.
+var GUTTER = 2 * MARGIN;
 var INK = '#1f2a37';
 var MUTED = '#5f6b7a';
 
@@ -132,7 +134,7 @@ function writeAgenda_(cell, snap, S, width) {
   if (a.topic && !a.isFastSunday) S(cell.appendParagraph(a.topic), { size: 1, italic: true, align: A.CENTER, after: 2 });
   rule_(cell, S);
 
-  var labelW = Math.round(width * 0.36);
+  var labelW = Math.round(width * 0.28); // enough for "Sacrament Hymn"; the rest goes to titles
   if (a.header.length) {
     pairTable_(cell, a.header.map(function (h) { return [h.label, h.value]; }), S, labelW, width, 0.92);
     rule_(cell, S);

@@ -40,6 +40,7 @@ Optional: **Bulletin → Setup → Auto-publish every Saturday evening** (6 PM A
 - **The website shows the last *published* bulletin.** Phones also keep the last bulletin they loaded, so it still opens on weak chapel Wi-Fi.
 - **The PDF is public** ("anyone with the link can view") so the Download button works. The editable Doc stays private.
 - **Order and page fit:** announcements are listed chronologically (soonest event first; undated items last, by **Order**). The printed bulletin lists each announcement as just its title and date/time (details and contacts are on the website), and always fits on one page: if they don't all fit, the ones with the latest dates are left off the paper copy, with a "+ N more announcements online" line. The website always shows all of them, and the admin page says how many made it onto paper. To fit more, lower **Print Font Size** to 10 or shorten long announcements.
+- **Printing:** the PDF is laid out to be printed double-sided and cut down the middle: each 5.5 × 8.5 in half has the same 0.5 in border on all four sides.
 - **Prayers:** a blank or N/A Invocation or Benediction shows **By Invitation**.
 - **Hymn links** open the hymn in Gospel Library. New hymns released later need adding to `apps-script/HymnLinks.gs`.
 - **Fast Sunday** is detected automatically. Speakers become *Bearing of Testimonies*, and the intermediate hymn is dropped.
