@@ -175,15 +175,15 @@ function writeAnnouncements_(cell, snap, settings, S, announcements, hiddenCount
   if (!announcements.length && !hiddenCount) {
     S(cell.appendParagraph('No announcements this week.'), { italic: true, color: MUTED, align: A.CENTER });
   }
+  // Paper gets just the title and date/time so more fit; details and contacts are online.
   announcements.forEach(function (n) {
-    S(cell.appendParagraph(n.title), { size: 1.05, bold: true, before: 4, after: 1 });
-    if (n.when) S(cell.appendParagraph(n.when), { size: 0.9, italic: true, color: MUTED, after: 1 });
-    if (n.details) S(cell.appendParagraph(n.details), { size: 0.95, after: 1, line: 1.05 });
-    if (n.contact) S(cell.appendParagraph('Contact: ' + n.contact), { size: 0.85, color: MUTED, after: 4 });
+    S(cell.appendParagraph(n.title), { size: 1.05, bold: true, before: 5, after: 0 });
+    if (n.when) S(cell.appendParagraph(n.when), { size: 0.9, color: MUTED, after: 0 });
   });
-  if (hiddenCount) {
-    S(cell.appendParagraph('+ ' + hiddenCount + ' more announcement' + (hiddenCount === 1 ? '' : 's') +
-      ' online' + (link ? ' at ' + link : '')), { size: 0.9, italic: true, align: A.CENTER, before: 6 });
+  if (announcements.length || hiddenCount) {
+    var more = hiddenCount ? '+ ' + hiddenCount + ' more announcement' + (hiddenCount === 1 ? '' : 's') + '. ' : '';
+    S(cell.appendParagraph(more + 'Details' + (link ? ' at ' + link : ' online')),
+      { size: 0.9, italic: true, align: A.CENTER, before: 8 });
   }
 
   if (!link) return;
