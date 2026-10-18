@@ -136,6 +136,14 @@ assert.strictEqual(timeRange('', '20:30'), '');
 const timed = selectAnnouncements([{ status: 'Approved', title: 'Dance', details: 'x', eventDate: '2026-10-28',
   startTime: '19:00', endTime: '20:30' }], '2026-10-11');
 assert.strictEqual(timed[0].when, 'Wednesday, October 28 · 7:00 PM – 8:30 PM');
+// Same date: earlier start time first, untimed first, regardless of sheet order.
+const sameDay = selectAnnouncements([
+  { status: 'Approved', title: 'Afternoon', details: 'x', eventDate: '2026-10-25', startTime: '14:00', order: 1 },
+  { status: 'Approved', title: 'Morning', details: 'x', eventDate: '2026-10-25', startTime: '10:00', endTime: '11:00', order: 2 },
+  { status: 'Approved', title: 'Early', details: 'x', eventDate: '2026-10-25', startTime: '9:30' },
+  { status: 'Approved', title: 'All day', details: 'x', eventDate: '2026-10-25' },
+], '2026-10-18');
+assert.strictEqual(sameDay.map((a) => a.title).join(' | '), 'All day | Early | Morning | Afternoon');
 assert.throws(() => wardFeedEvents({}, '2026-10-08'), /no unit data/);
 if (process.env.WARD_FEED) { // optional smoke test against a saved copy of the real feed
   const real = wardFeedEvents(JSON.parse(fs.readFileSync(process.env.WARD_FEED, 'utf8')), '2026-10-08');
@@ -150,6 +158,7 @@ const snap = {
   ward: 'Ahwatukee Groves Ward', stake: 'Tempe Arizona West Stake', meetingTime: '11:15 AM', classesTime: '10:00 AM', location: '', footer: '',
   deadline: 'Thursday at 5:00 PM', sundayYmd: '2026-10-11', dateLabel: formatYmd('2026-10-11', 'full'),
   agenda: fast, announcements: picked, publishedAt: 'Sat Oct 10 at 6:02 PM', submitUrl: 'submit.html',
+  wardWebsite: 'https://example.org/ward', missionaryMeals: 'https://example.org/meals',
 };
 const out = path.join(root, 'preview');
 fs.mkdirSync(out, { recursive: true });

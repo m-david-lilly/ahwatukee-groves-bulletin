@@ -131,7 +131,6 @@ function writeAgenda_(cell, snap, S, width) {
   var times = scheduleLine(snap.classesTime, snap.meetingTime);
   if (times) S(cell.appendParagraph(times), { size: 0.9, color: MUTED, align: A.CENTER, after: 2 });
   if (snap.location) S(cell.appendParagraph(snap.location), { size: 0.9, color: MUTED, align: A.CENTER, after: 2 });
-  if (a.topic && !a.isFastSunday) S(cell.appendParagraph(a.topic), { size: 1, italic: true, align: A.CENTER, after: 2 });
   rule_(cell, S);
 
   var labelW = Math.round(width * 0.28); // enough for "Sacrament Hymn"; the rest goes to titles
@@ -204,6 +203,12 @@ function writeAnnouncements_(cell, snap, settings, S, announcements, hiddenCount
       { size: 0.8, color: MUTED, align: A.CENTER, before: 6 });
     site.setLinkUrl(snap.wardWebsite);
     site.editAsText().setUnderline(false).setForegroundColor(MUTED); // Docs makes links blue + underlined
+  }
+  if (snap.missionaryMeals) {
+    var meals = S(cell.appendParagraph('Feed the missionaries: ' + snap.missionaryMeals.replace(/^https?:[/][/]/, '')),
+      { size: 0.8, color: MUTED, align: A.CENTER, before: snap.wardWebsite ? 0 : 6 });
+    meals.setLinkUrl(snap.missionaryMeals);
+    meals.editAsText().setUnderline(false).setForegroundColor(MUTED);
   }
 }
 

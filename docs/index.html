@@ -25,7 +25,6 @@
   header .stake { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
   header .sub { font: 1.1rem var(--serif); margin: 10px 0 2px; }
   header .when { color: var(--muted); font-size: .95rem; }
-  header .topic { font: italic 1rem var(--serif); margin-top: 8px; }
   .preview { background: #fff2cc; color: #5a4500; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;
     font-size: .9rem; text-align: center; }
   .grid { display: grid; gap: 16px; }
@@ -94,7 +93,6 @@
       .filter(Boolean).join(' · ');
     if (times) h.push('<div class="when">' + esc(times) + '</div>');
     if (d.location) h.push('<div class="when">' + esc(d.location) + '</div>');
-    if (a.topic && !a.isFastSunday) h.push('<div class="topic">' + esc(a.topic) + '</div>');
     h.push('</header><div class="grid">');
 
     h.push('<section class="card" aria-labelledby="p"><h2 id="p">Program</h2>');
@@ -127,6 +125,9 @@
     }
     if (d.wardWebsite) {
       h.push('<a class="btn ghost" href="' + esc(d.wardWebsite) + '" target="_blank" rel="noopener">Ward website</a>');
+    }
+    if (d.missionaryMeals) {
+      h.push('<a class="btn ghost" href="' + esc(d.missionaryMeals) + '" target="_blank" rel="noopener">Feed the missionaries</a>');
     }
     h.push('</div>');
     if (d.deadline) h.push('<div>Submissions for next Sunday are due ' + esc(d.deadline) + '.</div>');

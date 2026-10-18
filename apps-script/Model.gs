@@ -170,11 +170,14 @@ function isAnnouncementActive(a, sundayYmd) {
  */
 function selectAnnouncements(rows, sundayYmd) {
   var picked = rows.filter(function (a) { return isAnnouncementActive(a, sundayYmd); });
-  // Chronological: soonest event first, undated items last. Order only breaks ties
-  // (same date, or among undated items).
+  // Chronological: soonest event first, undated items last. On the same date, earlier
+  // start times come first (untimed/all-day items lead). Order only breaks the remaining
+  // ties (same date and time, or among undated items).
   picked.sort(function (a, b) {
     var ea = a.eventDate || '9999', eb = b.eventDate || '9999';
     if (ea !== eb) return ea < eb ? -1 : 1;
+    var ta = sortTime_(a.startTime), tb = sortTime_(b.startTime);
+    if (ta !== tb) return ta < tb ? -1 : 1;
     var oa = a.order === '' || a.order == null ? Infinity : Number(a.order);
     var ob = b.order === '' || b.order == null ? Infinity : Number(b.order);
     if (oa !== ob) return oa - ob;
@@ -188,6 +191,12 @@ function selectAnnouncements(rows, sundayYmd) {
       contact: cleanValue(a.contact),
     };
   });
+}
+
+/** "09:00" from "9:00" or "09:00" so times sort as text; '' if there is no time. */
+function sortTime_(t) {
+  var m = String(t == null ? '' : t).match(/^(\d{1,2}):(\d{2})/);
+  return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : '';
 }
 
 function ymdParts_(ymd) {

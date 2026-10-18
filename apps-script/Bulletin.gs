@@ -22,7 +22,7 @@ var ANNOUNCEMENT_HEADERS = ['Submitted', 'Status', 'Order', 'Title', 'Details', 
   'Run From', 'Run Through', 'Public Contact', 'Submitted By', 'Submitter Contact', 'Manager Notes', 'ID', 'Source',
   'Start Time', 'End Time'];
 // Bump when SETTING_DEFAULTS or the tab layout changes; the web app then upgrades the tabs itself.
-var SETUP_VERSION = 6;
+var SETUP_VERSION = 7;
 var ANNOUNCEMENT_STATUSES = ['Pending', 'Approved', 'Rejected', 'Archived'];
 
 // Admin page field -> sheet column, with the longest text allowed.
@@ -46,6 +46,7 @@ var SETTING_DEFAULTS = [
   ['Meeting Time', '11:10 AM', 'When sacrament meeting starts'],
   ['Ward Activities Feed', 'https://cdn.yextapis.com/v2/accounts/2970756/content/getUnitEventDetails?api_key=ac142022779c885e6473eee98a14b9c1&v=20250101&id=chq-unit-187305', 'Unofficial feed behind the activity list on the ward website; used by the Ward website tab on the admin page. Blank = turn the tab off'],
   ['Ward Website', 'https://local.churchofjesuschrist.org/en/units/us/az/ahwatukee-groves-ward', 'Linked from both bulletins (blank = leave off)'],
+  ['Missionary Meals Link', '', 'Sign-up page for feeding the missionaries, linked from both bulletins (blank = leave off). Use a short link if it is long; it is printed as text'],
   ['Location', '', 'Building name or address (optional)'],
   ['Presiding', '', 'Optional. Leave blank to leave the Presiding line off'],
   ['Notify Email', '', 'Gets an email for each new submission. Blank = no email'],
@@ -429,6 +430,7 @@ function buildSnapshot_(ss, settings) {
     meetingTime: String(settings['Meeting Time'] || ''),
     classesTime: String(settings['Classes Time'] || ''),
     wardWebsite: String(settings['Ward Website'] || ''),
+    missionaryMeals: String(settings['Missionary Meals Link'] || ''),
     location: String(settings['Location'] || ''),
     footer: String(settings['Footer'] || ''),
     deadline: String(settings['Submission Deadline'] || ''),
