@@ -213,6 +213,8 @@ const page = (file, bulletin) => fs.readFileSync(path.join(root, 'docs', file), 
     JSON.stringify(adminItems) + ',' + JSON.stringify(evs.map((e) => ({ ...e, details: eventAnnouncementDetails(e), url: '#' })))
     + ')</script><script src="api.js"></script>');
 fs.copyFileSync(path.join(root, 'docs', 'api.js'), path.join(out, 'api.js'));
+['favicon.svg', 'favicon-32.png', 'apple-touch-icon.png', 'admin-favicon.svg', 'admin-favicon-32.png',
+  'admin-apple-touch-icon.png'].forEach((f) => fs.copyFileSync(path.join(root, 'docs', f), path.join(out, f)));
 fs.writeFileSync(path.join(out, 'index.html'), page('index.html', { ...snap, pdfDownload: '#pdf' }));
 fs.writeFileSync(path.join(out, 'regular.html'), page('index.html', { ...snap, agenda: reg }));
 fs.writeFileSync(path.join(out, 'submit.html'), page('submit.html', snap));
