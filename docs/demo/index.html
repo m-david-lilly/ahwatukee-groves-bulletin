@@ -101,6 +101,8 @@ button.row:hover .txt b { color: var(--link); }
 .date { width: 44px; text-align: center; border-radius: 10px; background: var(--chip); color: var(--link); padding: 4px 0; flex: none; }
 .date b { display: block; font-size: 18px; line-height: 1.1; }
 .date span { font-size: 10.5px; text-transform: uppercase; font-weight: 600; }
+a.hymn { text-decoration: none; border: 1px solid transparent; }
+a.hymn:hover, a.hymn:focus-visible { border-color: var(--link); }
 .tag { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 1px 8px; margin-top: 3px; }
 .t-primary { background: var(--t-primary-bg); color: var(--t-primary); } .t-youth { background: var(--t-youth-bg); color: var(--t-youth); }
 .t-rs { background: var(--t-rs-bg); color: var(--t-rs); } .t-eq { background: var(--t-eq-bg); color: var(--t-eq); } .t-ward { background: var(--t-ward-bg); color: var(--t-ward); }
@@ -353,6 +355,8 @@ const FLYER_IMG = {
     <text x="150" y="344" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#555">for someone in the ward. Families welcome!</text>
     ${LEAF(120, 404, -20, '#e2b04a')}${LEAF(150, 400, 0, '#c0662f')}${LEAF(180, 404, 20, '#d9893f')}`),
 };
+const HYMNS = { 180: 'm/father-in-heaven-we-do-believe', 1001: 'h/come-thou-fount-of-every-blessing', 1039: 'h/because' };
+const hymnUrl = n => 'https://www.churchofjesuschrist.org/study/' + (HYMNS[n][0] === 'h' ? 'music/hymns-for-home-and-church/' : 'manual/hymns/') + HYMNS[n].slice(2) + '?lang=eng';
 const FLYER_COLORS = ['#fff59d', '#ffffff', '#ffd8c2', '#d9f0e3', '#e3eefa', '#f3e5f5'];
 
 const ES = {
@@ -528,7 +532,8 @@ const S = {
       <button class="card" style="width:100%;text-align:left" data-go="talk"><div class="lbl">${tr('New talk shared')}</div><h3>“Gratitude in hard seasons”</h3><div class="muted">From sacrament meeting, Oct 18 · 4 min read</div></button>`, 'home'];
   },
   sunday() {
-    const r = (l, v, n) => `<div class="row"><div class="txt"><div class="lbl">${l}</div>${v}</div>${n ? `<div class="date" style="width:56px"><b>${n}</b><span>Hymn</span></div>` : ''}</div>`;
+    // same Gospel Library links as the live bulletin (apps-script/HymnLinks.gs); they open the app on phones
+    const r = (l, v, n) => `<div class="row"><div class="txt"><div class="lbl">${l}</div>${v}</div>${n ? `<a class="date hymn" style="width:56px" href="${hymnUrl(n)}" target="_blank" rel="noopener" aria-label="Open hymn ${n} in Gospel Library"><b>${n}</b><span>Open ›</span></a>` : ''}</div>`;
     const c = t => `<div class="row"><div class="txt" style="text-align:center;font-style:italic;color:var(--muted)">${t}</div></div>`;
     return ['Sacrament Meeting', 'Sunday, November 1 · 11:10 AM', `${heroHtml()}
       <div class="card"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13.5px">
