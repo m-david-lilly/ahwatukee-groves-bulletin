@@ -15,7 +15,7 @@
   --field: #ffffff; --field-rule: #d9d2c4; --ok: #2f6b3a; --ok-bg: #e2f2e6; --warn-bg: #fff7ef; --warn-rule: #f1d9c6;
   --pend: #8a6100; --pend-bg: #fff2cc; --off: #eceae4; --off-ink: #a3a8ae; --booked: #e3effa; --scrim: rgba(15, 22, 30, .45);
   --t-primary-bg: #fde8dc; --t-primary: #9a4220; --t-youth-bg: #e3effa; --t-youth: #2f5d7c; --t-rs-bg: #efe6f7; --t-rs: #6b3f8f;
-  --t-eq-bg: #e2f2e6; --t-eq: #2f6b3a; --t-ward-bg: #f1ede3; --t-ward: #6b5a2c;
+  --t-eq-bg: #e2f2e6; --t-eq: #2f6b3a; --t-ward-bg: #f1ede3; --t-ward: #6b5a2c; --hero: #c7643a; --hero-2: #8f3d1c;
   --display: Georgia, "Iowan Old Style", "Times New Roman", serif;
   --body: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
 }
@@ -26,7 +26,7 @@
   --field: #141a20; --field-rule: #36414d; --ok: #7cc68e; --ok-bg: #1b3324; --warn-bg: #2c2219; --warn-rule: #4a3626;
   --pend: #e8c46a; --pend-bg: #3a3017; --off: #20262d; --off-ink: #5f6a75; --booked: #1c2d3c; --scrim: rgba(0, 0, 0, .6);
   --t-primary-bg: #3a2419; --t-primary: #f0a882; --t-youth-bg: #1c2d3c; --t-youth: #8ec0e4; --t-rs-bg: #2b2236; --t-rs: #c9a4e6;
-  --t-eq-bg: #1b3324; --t-eq: #7cc68e; --t-ward-bg: #2e2a1f; --t-ward: #d8c48e; color-scheme: dark; } }
+  --t-eq-bg: #1b3324; --t-eq: #7cc68e; --t-ward-bg: #2e2a1f; --t-ward: #d8c48e; --hero: #a8502b; --hero-2: #6b2c14; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --stage: #0e1216; --panel: #161b21; --frame: #000000;
   --navy: #142333; --on-navy: #f2f5f8; --accent: #3f739a; --on-accent: #ffffff; --link: #8ec0e4; --terra: #e08a62;
@@ -34,7 +34,7 @@
   --field: #141a20; --field-rule: #36414d; --ok: #7cc68e; --ok-bg: #1b3324; --warn-bg: #2c2219; --warn-rule: #4a3626;
   --pend: #e8c46a; --pend-bg: #3a3017; --off: #20262d; --off-ink: #5f6a75; --booked: #1c2d3c; --scrim: rgba(0, 0, 0, .6);
   --t-primary-bg: #3a2419; --t-primary: #f0a882; --t-youth-bg: #1c2d3c; --t-youth: #8ec0e4; --t-rs-bg: #2b2236; --t-rs: #c9a4e6;
-  --t-eq-bg: #1b3324; --t-eq: #7cc68e; --t-ward-bg: #2e2a1f; --t-ward: #d8c48e; color-scheme: dark; }
+  --t-eq-bg: #1b3324; --t-eq: #7cc68e; --t-ward-bg: #2e2a1f; --t-ward: #d8c48e; --hero: #a8502b; --hero-2: #6b2c14; color-scheme: dark; }
 
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--stage); color: var(--ink); font: 15px/1.45 var(--body); }
@@ -209,6 +209,19 @@ textarea.in { resize: vertical; min-height: 76px; }
 .empty { text-align: center; padding: 18px 8px; color: var(--muted); font-size: 13.5px; }
 .sms { background: var(--chip); border-radius: 14px 14px 14px 4px; padding: 9px 12px; font-size: 13.5px; margin-top: 8px; }
 
+/* rotating banner */
+.hero { position: relative; border-radius: 14px; margin-bottom: 12px; color: #fff; background: linear-gradient(135deg, var(--hero), var(--hero-2)); text-align: center; overflow: hidden; }
+.hero .slide { display: block; width: 100%; border: 0; background: transparent; color: inherit; padding: 14px 46px 6px; text-align: center; animation: fade .45s ease; }
+.hero .k { font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; opacity: .85; font-weight: 700; }
+.hero b { display: block; font: 700 21px/1.2 var(--display); margin: 3px 0 2px; text-wrap: balance; }
+.hero .w { font-size: 13px; opacity: .95; }
+.hero .ar { position: absolute; top: 30px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .22); color: #fff; font-size: 18px; line-height: 1; }
+.hero .ar.l { left: 8px; } .hero .ar.r { right: 8px; }
+.hero .ctl { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 2px 0 10px; }
+.hero .dot { width: 8px; height: 8px; border-radius: 4px; border: 0; padding: 0; background: rgba(255, 255, 255, .45); }
+.hero .dot.on { background: #fff; width: 18px; }
+.hero .pp { border: 0; background: transparent; color: #fff; font-size: 11.5px; font-weight: 700; margin-left: 8px; opacity: .9; }
+
 /* sheet + toast */
 .scrim { position: absolute; inset: 0; background: var(--scrim); display: flex; align-items: flex-end; z-index: 20; animation: fade .18s ease; }
 .sheet { width: 100%; background: var(--bg); border-radius: 20px 20px 0 0; padding: 10px 16px 20px; max-height: 80%; overflow-y: auto; animation: rise .22s ease; }
@@ -217,7 +230,7 @@ textarea.in { resize: vertical; min-height: 76px; }
 .toast { position: absolute; left: 16px; right: 16px; bottom: 86px; background: var(--ink); color: var(--bg); border-radius: 12px; padding: 11px 14px; font-size: 13.5px; font-weight: 600; z-index: 30; box-shadow: 0 8px 20px rgba(0, 0, 0, .25); animation: rise .2s ease; }
 @keyframes rise { from { transform: translateY(16px); opacity: 0; } }
 @keyframes fade { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .scrim, .sheet, .toast { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .scrim, .sheet, .toast, .hero .slide { animation: none; } }
 
 @media (max-width: 880px) {
   .wrap { grid-template-columns: minmax(0, 1fr); gap: 18px; padding-block: 16px 32px; }
@@ -256,6 +269,8 @@ const DOWL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const TODAY = '2026-10-30';
+const REDUCED = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+const TEXT_COST = 0.012;
 const ORG = { ward: 'Whole ward', primary: 'Primary', youth: 'Youth', rs: 'Relief Society', eq: 'Elders Quorum' };
 const SUBMIT_ORGS = [['youth', 'Young Women'], ['primary', 'Primary'], ['rs', 'Relief Society'], ['eq', 'Elders Quorum'], ['ward', 'Activities committee']];
 const ROLES = {
@@ -271,7 +286,7 @@ const TITHING_TIMES = ['9:00', '9:15', '9:30', '9:45', '10:00', '10:15', '10:30'
 const FLYER_COLORS = ['#fff59d', '#ffffff', '#ffd8c2', '#d9f0e3', '#e3eefa', '#f3e5f5'];
 
 const ES = {
-  'Coming up': 'Próximamente', 'This Sunday': 'Este domingo', 'Open the program': 'Ver el programa', 'Where do I go?': '¿A dónde voy?',
+  'Coming up': 'Próximamente', 'This week and next': 'Estas dos semanas', 'This Sunday': 'Este domingo', 'Open the program': 'Ver el programa', 'Where do I go?': '¿A dónde voy?',
   'See the full calendar': 'Ver el calendario completo', 'New talk shared': 'Nuevo discurso', 'Quick links': 'Enlaces rápidos',
   'Sign-ups': 'Inscripciones', 'Meet with the bishop': 'Hablar con el obispo', 'Far From Home': 'Lejos de casa', 'Bulletin board': 'Tablón de anuncios',
   Home: 'Inicio', Sunday: 'Domingo', Calendar: 'Calendario', Groups: 'Grupos', More: 'Más',
@@ -314,16 +329,16 @@ function fresh() {
     role: 'member', lang: 'en', stack: [['home']], sheet: null, f: {},
     cal: { month: '2026-11', day: '2026-11-01', filter: 'all' }, age: 'a13', room: null,
     events: [
-      { id: 'e1', d: '2026-11-01', title: 'Harvest Potluck', when: 'After church', place: 'Cultural hall', org: 'ward', link: 'potluck' },
+      { id: 'e1', major: true, d: '2026-11-01', title: 'Harvest Potluck', when: 'After church', place: 'Cultural hall', org: 'ward', link: 'potluck' },
       { id: 'e2', d: '2026-11-04', title: 'Youth activity: baking for neighbors', when: '7:00 PM', place: 'Church kitchen', org: 'youth' },
       { id: 'e3', d: '2026-11-05', title: 'Relief Society book group', when: '7:00 PM', place: "Sister Roe's home", org: 'rs' },
       { id: 'e4', d: '2026-11-07', title: 'Service project: yard cleanup', when: '8:00 to 10:00 AM', place: 'Elliot Rd', org: 'eq', link: 'rsvp' },
       { id: 'e5', d: '2026-11-07', title: 'Primary harvest party', when: '11:00 AM', place: 'Cultural hall', org: 'primary' },
       { id: 'e6', d: '2026-11-11', title: 'Youth: Veterans Day flag service', when: '6:30 PM', place: 'Stake center', org: 'youth' },
-      { id: 'e7', d: '2026-11-12', title: 'Temple night', when: '7:00 PM', place: 'Mesa Temple', org: 'ward' },
-      { id: 'e8', d: '2026-11-15', title: 'Tithing declaration begins', when: 'Book a time with the bishop', place: "Bishop's office", org: 'ward', link: 'tithing' },
-      { id: 'e9', d: '2026-11-21', title: 'Ward Thanksgiving breakfast', when: '8:00 AM', place: 'Cultural hall', org: 'ward' },
-      { id: 'e10', d: '2026-12-05', title: 'Ward Christmas party', when: '6:00 PM', place: 'Cultural hall', org: 'ward' },
+      { id: 'e7', major: true, d: '2026-11-12', title: 'Temple night', when: '7:00 PM', place: 'Mesa Temple', org: 'ward' },
+      { id: 'e8', major: true, d: '2026-11-15', title: 'Tithing declaration begins', when: 'Book a time with the bishop', place: "Bishop's office", org: 'ward', link: 'tithing' },
+      { id: 'e9', major: true, d: '2026-11-21', title: 'Ward Thanksgiving breakfast', when: '8:00 AM', place: 'Cultural hall', org: 'ward' },
+      { id: 'e10', major: true, d: '2026-12-05', title: 'Ward Christmas party', when: '6:00 PM', place: 'Cultural hall', org: 'ward' },
       { id: 'e11', d: '2026-12-20', title: 'Christmas sacrament program', when: '11:10 AM', place: 'Chapel', org: 'ward' },
       { id: 'e0', d: '2026-10-31', title: 'Primary Halloween parade', when: '10:00 AM', place: 'Church parking lot', org: 'primary' },
     ],
@@ -335,7 +350,8 @@ function fresh() {
       { title: 'Choir practice', text: 'Sundays after church. All voices welcome.', color: '#e3eefa' },
       { title: 'Tithing Declaration', text: 'Book a time · Nov 15 to Dec 29', color: '#f3e5f5', link: 'tithing' },
     ],
-    pending: [], decided: [],
+    pending: [], decided: [], hero: 0, heroPaused: REDUCED,
+    texting: { spent: 15.10, budget: 20, people: 140 },
     potluck: {
       cats: [
         { k: 'main', n: 'Main dishes', cap: 8, who: [['Maria R.', 'Chicken enchiladas'], ['Tom & Ann K.', 'Lasagna'], ['The Parks', 'Pulled pork'], ['Lupe M.', 'Tamales'], ['James T.', 'Chili']] },
@@ -390,14 +406,37 @@ const nav = (go, title, sub, ico, color, badge) => `<button class="row" data-go=
 const inp = (k, ph, d = '', type = 'text') => `<input class="in" id="f-${k}" data-f="${k}" type="${type}" placeholder="${esc(ph)}" value="${esc(val(k, d))}">`;
 function sheet(html) { st.sheet = html; render(); }
 function toast(msg) {
-  clearTimeout(toastTimer);
-  document.querySelector('.toast')?.remove();
-  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
-  document.getElementById('phone').appendChild(t);
-  toastTimer = setTimeout(() => t.remove(), 2800);
+  // shown after the action's re-render, which would otherwise wipe it
+  setTimeout(() => {
+    clearTimeout(toastTimer);
+    document.querySelector('.toast')?.remove();
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+    document.getElementById('phone').appendChild(t);
+    toastTimer = setTimeout(() => t.remove(), 3200);
+  }, 0);
 }
 const pendingFor = () => st.pending.length;
 const newRequests = () => st.appt.requests.length;
+
+const majors = () => st.events.filter(e => e.major && e.d >= TODAY).sort((a, b) => a.d.localeCompare(b.d)).slice(0, 6);
+function heroHtml() {
+  const m = majors(); if (!m.length) return '';
+  const i = st.hero % m.length, e = m[i];
+  const open = e.link ? `data-go="${e.link}"` : `data-act="pickDay" data-v="${e.d}"`;
+  const dots = m.map((_, k) => `<button class="dot ${k === i ? 'on' : ''}" data-act="heroDot" data-v="${k}" aria-label="Show event ${k + 1} of ${m.length}"></button>`).join('');
+  return `<div class="hero" aria-roledescription="carousel" aria-label="Major upcoming events">
+    <button class="slide" ${open}><div class="k">${tr('Coming up')} · ${i + 1} of ${m.length}</div><b>${esc(e.title)}</b><div class="w">${dlabel(e.d)} · ${esc(e.when)} · ${esc(e.place)}</div></button>
+    <button class="ar l" data-act="heroStep" data-v="-1" aria-label="Previous event">‹</button><button class="ar r" data-act="heroStep" data-v="1" aria-label="Next event">›</button>
+    <div class="ctl">${dots}<button class="pp" data-act="heroPause">${st.heroPaused ? '▶ Play' : '❚❚ Pause'}</button></div></div>`;
+}
+function textMeter() {
+  const t = st.texting, pct = Math.min(100, Math.round(100 * t.spent / t.budget));
+  const msg = pct >= 100 ? 'Budget reached. Texts go out as email until November 1. The bishop can approve an urgent ward-wide notice.'
+    : pct >= 80 ? `Over 80% of the budget. The coordinator has been warned; at $${t.budget} texts switch to email until November 1.`
+    : 'Budget set by the bishopric. The coordinator is warned at 80%; at 100% texts switch to email until next month.';
+  return `<div class="card"><div class="sec"><h3>Ward texting this month</h3><span class="cnt" style="font-variant-numeric:tabular-nums">$${t.spent.toFixed(2)} of $${t.budget}</span></div>
+    <div class="bar"><i style="width:${pct}%;background:${pct >= 80 ? 'var(--terra)' : 'var(--accent)'}"></i></div><div class="muted" style="font-size:12.5px">${msg}</div></div>`;
+}
 
 /* screens: each returns [title, subtitle, body, tab] */
 const S = {
@@ -409,15 +448,15 @@ const S = {
     const fresh = st.decided.filter(p => p.ok).map(p => st.events.find(e => e.id === p.id)).filter(Boolean);
     const just = fresh.length ? `<div class="card" style="border-color:var(--ok)"><h3>${tr('Just posted')} <span class="tag t-ok">New</span></h3>${fresh.map(evRow).join('')}</div>` : '';
     const quick = `<div class="card list">${nav('signups', tr('Sign-ups'), 'Potluck, missionaries, tithing declaration', '✓', 'eq')}${nav('appt', tr('Meet with the bishop'), 'Ask for an appointment', 'B', 'youth')}${nav('board', tr('Bulletin board'), 'Flyers and announcements', '▦', 'ward')}${nav('far', tr('Far From Home'), 'Send a note to a missionary', '✉', 'rs')}</div>`;
-    return ['Ahwatukee Groves Ward', st.lang === 'es' ? 'Estaca Tempe Arizona West' : 'Tempe Arizona West Stake', `${sun}
-      ${just}<div class="card"><h3>${tr('Coming up')}</h3>${list}<button class="link" style="margin-top:8px" data-tab="calendar">${tr('See the full calendar')} ›</button></div>
+    return ['Ahwatukee Groves Ward', st.lang === 'es' ? 'Estaca Tempe Arizona West' : 'Tempe Arizona West Stake', `${heroHtml()}${sun}
+      ${just}<div class="card"><h3>${tr('This week and next')}</h3>${list}<button class="link" style="margin-top:8px" data-tab="calendar">${tr('See the full calendar')} ›</button></div>
       <div class="grouphd">${tr('Quick links')}</div>${quick}
       <button class="card" style="width:100%;text-align:left" data-go="talk"><div class="lbl">${tr('New talk shared')}</div><h3>“Gratitude in hard seasons”</h3><div class="muted">From sacrament meeting, Oct 18 · 4 min read</div></button>`, 'home'];
   },
   sunday() {
     const r = (l, v, n) => `<div class="row"><div class="txt"><div class="lbl">${l}</div>${v}</div>${n ? `<div class="date" style="width:56px"><b>${n}</b><span>Hymn</span></div>` : ''}</div>`;
     const c = t => `<div class="row"><div class="txt" style="text-align:center;font-style:italic;color:var(--muted)">${t}</div></div>`;
-    return ['Sacrament Meeting', 'Sunday, November 1 · 11:10 AM', `
+    return ['Sacrament Meeting', 'Sunday, November 1 · 11:10 AM', `${heroHtml()}
       <div class="card"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13.5px">
         <div><div class="lbl">Presiding</div>Bishop Carter</div><div><div class="lbl">Conducting</div>Brother Whitaker</div>
         <div><div class="lbl">Chorister</div>Sister Lopez</div><div><div class="lbl">Organist</div>Sister Roe</div></div></div>
@@ -540,7 +579,7 @@ const S = {
         <div class="f"><label for="f-date">Event date</label>${inp('date', '', '2026-11-18', 'date')}</div>
         <div class="two f"><div><label for="f-from">From</label>${inp('from', '7:00 PM', '7:00 PM')}</div><div><label for="f-to">To</label>${inp('to', '8:30 PM', '8:30 PM')}</div></div>
         <div class="f"><label for="f-place">Where</label>${inp('place', 'Room or address', 'Cultural hall')}</div>
-        <div class="f"><span class="label">Also show on</span>${ck('sBul', 'Printed bulletin', true)}${ck('sCal', 'Ward calendar', true)}${ck('sOrg', "The organization's page", true)}${ck('sTxt', 'Text alert to people who signed up', false)}</div>
+        <div class="f"><span class="label">Also show on</span>${ck('sBul', 'Printed bulletin', true)}${ck('sCal', 'Ward calendar', true)}${ck('sOrg', "The organization's page", true)}${ck('sTxt', `Text alert to the ${st.texting.people} people who signed up (about $${(st.texting.people * TEXT_COST).toFixed(2)} of the ward's texting budget)`, false)}</div>
         <button class="btn" data-act="submit">Send for approval</button></div>`, 'more'];
   },
   approve() {
@@ -549,11 +588,12 @@ const S = {
       <div class="muted" style="margin:6px 0">${esc(p.details)}</div>
       <div class="muted" style="font-size:12px">From ${SUBMIT_ORGS.find(o => o[0] === p.org)[1]} · sent just now · will show on ${p.show.join(', ')}</div>
       ${p.org !== 'youth' ? `<div class="muted" style="font-size:12px;margin-top:4px"><i>In the real portal this goes to the ${ORG[p.org]} leaders. Shown here for the demo.</i></div>` : ''}
+      <label class="check" style="margin-top:10px"><input type="checkbox" data-f="major-${p.id}" ${val('major-' + p.id, true) ? 'checked' : ''}><span>Major event: show it in the rotating banner on Home and the bulletin</span></label>
       <div class="btns" style="margin-top:12px"><button class="btn green" data-act="approveIt" data-v="${p.id}">Approve</button><button class="btn ghost" data-act="sendBack" data-v="${p.id}">Send back</button></div></div>`).join('');
     const done = st.decided.map(p => `<div class="card"><span class="tag ${p.ok ? 't-ok' : 't-pend'}">${p.ok ? 'Approved' : 'Sent back'}</span><h3 style="margin-top:6px">${esc(p.title)}</h3>
       <div class="muted">${p.ok ? `Now showing on ${p.show.join(', ')}.` : 'The sender was asked to make changes.'}</div>
       ${p.ok ? `<div class="btns" style="margin-top:10px"><button class="btn ghost" data-act="seeCal" data-v="${p.d}">See it on the calendar</button><button class="btn ghost" data-go="board">Bulletin board</button></div>` : ''}</div>`).join('');
-    return ['Needs Your Approval', 'Young Women president', `${items || '<div class="card"><div class="empty">Nothing is waiting for you.<br>Switch to <b>Ward member</b> and use More › Submit an announcement to send one here.</div></div>'}${done}
+    return ['Needs Your Approval', 'Young Women president', `${textMeter()}${items || '<div class="card"><div class="empty">Nothing is waiting for you.<br>Switch to <b>Ward member</b> and use More › Submit an announcement to send one here.</div></div>'}${done}
       <div class="card info"><b>Every 6 months:</b> <span class="muted">confirm who can post for Young Women. One tap keeps or removes each person.</span></div>`, 'more'];
   },
   signups() {
@@ -754,9 +794,17 @@ const A = {
   approveIt(v) {
     const p = st.pending.find(x => x.id === v); st.pending = st.pending.filter(x => x.id !== v);
     p.ok = true; st.decided.unshift(p);
-    if (p.show.includes('calendar')) st.events.push({ id: p.id, d: p.d, title: p.title, when: `${p.from} to ${p.to}`, place: p.place, org: p.org });
+    const major = !!val('major-' + p.id, true);
+    if (p.show.includes('calendar') || major) st.events.push({ id: p.id, d: p.d, title: p.title, when: `${p.from} to ${p.to}`, place: p.place, org: p.org, major });
+    if (major) st.hero = majors().findIndex(e => e.id === p.id);
     st.flyers.unshift({ title: p.title, text: `${dlabel(p.d)} · ${p.from}. ${p.details}`, color: FLYER_COLORS[st.decided.length % 6], isNew: true });
-    toast('Approved. It now shows on the ' + p.show.join(', ') + '.');
+    let note = '';
+    if (p.show.includes('text alert')) {
+      const t = st.texting, cost = t.people * TEXT_COST;
+      if (t.spent + cost > t.budget) { p.show = p.show.map(x => (x === 'text alert' ? 'email (texting budget reached)' : x)); note = ' Texting budget reached, so it went by email.'; }
+      else { t.spent += cost; note = ` Text sent to ${t.people} people ($${cost.toFixed(2)}).`; if (t.spent / t.budget >= 0.8) note += ' Texting is over 80% of budget.'; }
+    }
+    toast('Approved.' + (major ? ' It is in the banner.' : '') + note);
   },
   sendBack(v) { const p = st.pending.find(x => x.id === v); st.pending = st.pending.filter(x => x.id !== v); p.ok = false; st.decided.unshift(p); toast('Sent back with a note to the sender.'); },
   potluck() {
@@ -845,6 +893,9 @@ const A = {
   as(v) { setRole(v, true); return 'skip'; },
   signout() { setRole('member', true); return 'skip'; },
   close() { st.sheet = null; },
+  heroStep(v) { const n = majors().length || 1; st.hero = (st.hero + Number(v) + n) % n; st.heroPaused = true; },
+  heroDot(v) { st.hero = Number(v); st.heroPaused = true; },
+  heroPause() { st.heroPaused = !st.heroPaused; },
   lang() { st.lang = st.lang === 'en' ? 'es' : 'en'; },
 };
 
@@ -906,8 +957,8 @@ phoneEl.addEventListener('input', e => { const t = e.target; if (t.dataset.f && 
 
 /* guide */
 const FLOWS = [
-  ['Sunday morning', 'A member finds the program and their class', 'member', [['home']], ['Tap <b>Open the program</b>, or the Sunday tab', 'Tap <b>Where do I go?</b>', 'Pick an age group and tap a class to see its room', 'Try the <b>ES</b> button on Home for Spanish']],
-  ['Post an announcement', 'From a member’s idea to the calendar, with approval', 'member', [['more'], ['submit']], ['As a ward member, tap <b>Send for approval</b>', 'Switch to <b>Young Women president</b>', 'Tap <b>Approve</b>', 'Check Home, the Calendar (Nov 18) and the Bulletin board']],
+  ['Sunday morning', 'A member finds the program and their class', 'member', [['home']], ['The banner at the top rotates the big events every 6 seconds; try the arrows or Pause', 'Tap <b>Open the program</b>, or the Sunday tab', 'Tap <b>Where do I go?</b>', 'Pick an age group and tap a class to see its room', 'Try the <b>ES</b> button on Home for Spanish']],
+  ['Post an announcement', 'From a member’s idea to the calendar, with approval', 'member', [['more'], ['submit']], ['As a ward member, tick <b>Text alert</b> and tap <b>Send for approval</b>', 'Switch to <b>Young Women president</b> and note the texting budget meter', 'Leave <b>Major event</b> ticked and tap <b>Approve</b>', 'The meter passes 80%; the event is now in the Home banner, the Calendar (Nov 18) and the Bulletin board']],
   ['Sign up and RSVP', 'Potluck, missionary dinners, tithing declaration', 'member', [['more'], ['signups']], ['Open <b>Harvest Potluck</b> and sign up for a salad', 'Open <b>Feed the Missionaries</b> and take an orange day', 'Book a <b>Tithing Declaration</b> time', 'RSVP to the service project']],
   ['Meet with the bishop', 'Request, booking, and the youth rule', 'member', [['more'], ['appt']], ['As a member, tick the under-18 box and send', 'Switch to <b>Executive secretary</b> and tap an open time', 'Book the request; it waits for a parent', 'Tap the booking and confirm an adult', 'Switch to <b>Bishop</b> and change his hours']],
   ['Stay connected', 'Reminders, notes to missionaries, discussions', 'member', [['more'], ['far']], ['Send a note to a missionary', 'More › <b>Get reminders</b> by text', 'Groups › Sunday School: post a thought for the teacher']],
@@ -924,6 +975,13 @@ document.getElementById('flows').addEventListener('click', e => {
 });
 document.getElementById('reset').addEventListener('click', () => { st = fresh(); render(true); toast('Demo reset.'); });
 render(true);
+setInterval(() => {
+  if (st.heroPaused || st.sheet || !['home', 'sunday'].includes(cur()[0])) return;
+  const el = document.querySelector('#phone .hero');
+  if (!el) return;
+  st.hero = (st.hero + 1) % (majors().length || 1);
+  el.outerHTML = heroHtml();
+}, 6000);
 })();
 </script>
 </body>
