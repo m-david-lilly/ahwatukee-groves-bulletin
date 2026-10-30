@@ -209,12 +209,24 @@ textarea.in { resize: vertical; min-height: 76px; }
 .empty { text-align: center; padding: 18px 8px; color: var(--muted); font-size: 13.5px; }
 .sms { background: var(--chip); border-radius: 14px 14px 14px 4px; padding: 9px 12px; font-size: 13.5px; margin-top: 8px; }
 
+/* flyer images */
+.flyer.pic { padding: 0; min-height: 0; background: #fff; }
+.flyer.pic img { display: block; width: 100%; height: auto; }
+.flyer.pic .pin { z-index: 1; }
+.flyer.pic .new { z-index: 1; top: 6px; }
+.fbig { display: block; width: 100%; max-height: 58vh; object-fit: contain; border-radius: 8px; background: var(--card-2, #f4f1ea); margin-bottom: 10px; }
+.fprev { display: flex; gap: 10px; align-items: center; }
+.fprev img { width: 72px; height: auto; border-radius: 4px; box-shadow: 0 2px 6px rgba(0, 0, 0, .2); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
 /* rotating banner */
 .hero { position: relative; border-radius: 14px; margin-bottom: 12px; color: #fff; background: linear-gradient(135deg, var(--hero), var(--hero-2)); text-align: center; overflow: hidden; }
 .hero .slide { display: block; width: 100%; border: 0; background: transparent; color: inherit; padding: 14px 46px 6px; text-align: center; animation: fade .45s ease; }
 .hero .k { font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; opacity: .85; font-weight: 700; }
 .hero b { display: block; font: 700 21px/1.2 var(--display); margin: 3px 0 2px; text-wrap: balance; }
 .hero .w { font-size: 13px; opacity: .95; }
+.hero .slide.has-img { display: flex; gap: 12px; align-items: center; text-align: left; }
+.hero .th { width: 56px; height: auto; flex: none; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); background: #fff; }
 .hero .ar { position: absolute; top: 30px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .22); color: #fff; font-size: 18px; line-height: 1; }
 .hero .ar.l { left: 8px; } .hero .ar.r { right: 8px; }
 .hero .ctl { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 2px 0 10px; }
@@ -283,6 +295,63 @@ const PEOPLE = { b: 'Bishop', c1: '1st counselor', c2: '2nd counselor' };
 const APPT_DAYS = [['2026-11-08', 'sun'], ['2026-11-10', 'tue'], ['2026-11-11', 'wed']];
 const HOURS = { sun: ['Sun', '1 to 3 PM', ['1:00', '1:20', '1:40', '2:00', '2:20', '2:40']], tue: ['Tue', '7 to 9 PM', ['7:00', '7:20', '7:40', '8:00', '8:20', '8:40']], wed: ['Wed', '7 to 9 PM', ['7:00', '7:20', '7:40', '8:00', '8:20', '8:40']] };
 const TITHING_TIMES = ['9:00', '9:15', '9:30', '9:45', '10:00', '10:15', '10:30', '10:45'];
+const svgUri = x => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420">${x}</svg>`);
+const PUMPKIN = (x, y, k) => `<g transform="translate(${x} ${y}) scale(${k})"><path d="M-6 -46 q4 -18 16 -24" stroke="#6b4a2b" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <ellipse cx="-34" cy="0" rx="34" ry="44" fill="#e9915a"/><ellipse cx="34" cy="0" rx="34" ry="44" fill="#e9915a"/><ellipse cx="0" cy="0" rx="34" ry="47" fill="#f2a46e"/>
+  <path d="M0 -46 v92 M-30 -38 q-8 38 0 76 M30 -38 q8 38 0 76" stroke="#d27a45" stroke-width="2" fill="none" opacity=".6"/></g>`;
+const LEAF = (x, y, r, c) => `<path transform="translate(${x} ${y}) rotate(${r})" d="M0 0 q14 -22 0 -46 q-14 24 0 46z" fill="${c}" opacity=".85"/>`;
+const FLYER_IMG = {
+  temple: svgUri(`<rect width="300" height="420" fill="#fff"/>
+    <text x="54" y="62" font-family="cursive" font-style="italic" font-size="20" fill="#555">give</text>
+    <text x="150" y="108" text-anchor="middle" font-family="Georgia,serif" font-size="58" fill="#f2955e">thanks</text>
+    <text x="196" y="138" text-anchor="middle" font-family="cursive" font-style="italic" font-size="22" fill="#444">to the Lord</text>
+    <text x="150" y="178" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#333">Come worship with us</text>
+    <text x="150" y="204" text-anchor="middle" font-family="Georgia,serif" font-size="21" fill="#f2955e">Thursday, November 12</text>
+    <text x="150" y="226" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="#333">Mesa Temple</text>
+    <text x="150" y="244" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="#333">7:00 PM endowment</text>
+    <text x="150" y="268" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#444">Meet at the church at 6:15 PM to carpool.</text>
+    ${LEAF(40, 410, -35, '#e8a77a')}${LEAF(70, 404, -10, '#c9b47a')}${LEAF(232, 408, 20, '#e8a77a')}${LEAF(262, 410, 40, '#a9b07a')}${LEAF(20, 396, -60, '#a9b07a')}
+    ${PUMPKIN(150, 362, 1)}${LEAF(98, 418, -5, '#f0c27a')}${LEAF(206, 418, 8, '#f0c27a')}`),
+  christmas: svgUri(`<rect width="300" height="420" fill="#1f4d3a"/>
+    <rect x="12" y="12" width="276" height="396" fill="none" stroke="#d9b45a" stroke-width="2"/>
+    <polygon points="150,46 156,62 173,62 159,72 164,88 150,78 136,88 141,72 127,62 144,62" fill="#f3d27a"/>
+    <polygon points="150,96 196,170 104,170" fill="#2f7a55"/><polygon points="150,130 210,214 90,214" fill="#2f7a55"/><rect x="142" y="214" width="16" height="18" fill="#7a5532"/>
+    <circle cx="136" cy="156" r="5" fill="#d64b3c"/><circle cx="166" cy="190" r="5" fill="#f3d27a"/><circle cx="128" cy="200" r="5" fill="#d64b3c"/>
+    <text x="150" y="278" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#fff">Ward Christmas</text>
+    <text x="150" y="312" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#fff">Party</text>
+    <text x="150" y="346" text-anchor="middle" font-family="Georgia,serif" font-size="15" fill="#f3d27a">Saturday, December 5 · 6:00 PM</text>
+    <text x="150" y="368" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#e6efe9">Cultural hall · dinner and a nativity</text>`),
+  names: svgUri(`<rect width="300" height="420" fill="#2f7f80"/><rect x="14" y="14" width="272" height="392" fill="#fff"/>
+    <text x="150" y="46" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="10" letter-spacing="3" fill="#c9911f">CELEBRATE FAMILY HISTORY</text>
+    ${[[0, -60], [-30, -50], [30, -50], [-48, -28], [48, -28], [-20, -30], [20, -30], [0, -36], [-36, -6], [36, -6], [-12, -10], [12, -10], [-56, -6], [56, -6]].map(([x, y], k) => LEAF(150 + x, 118 + y + 30, (k % 5 - 2) * 25, '#2f7f80')).join('')}
+    <path d="M140 196 l4 -60 l-16 -18 M160 196 l-4 -60 l16 -18" stroke="#f0b81c" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="150" y="240" text-anchor="middle" font-family="Impact,'Arial Narrow',sans-serif" font-size="30" letter-spacing="4" fill="#2f7f80">TEMPLE</text>
+    <text x="150" y="274" text-anchor="middle" font-family="Impact,'Arial Narrow',sans-serif" font-size="30" letter-spacing="4" fill="#2f7f80">FAMILY NAMES</text>
+    <text x="150" y="308" text-anchor="middle" font-family="Impact,'Arial Narrow',sans-serif" font-size="30" letter-spacing="4" fill="#2f7f80">CLINIC</text>
+    <rect x="100" y="320" width="100" height="1.5" fill="#c9911f"/>
+    <text x="150" y="344" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="14" fill="#2f7f80">Sunday, November 22 · 2:00 PM</text>
+    <text x="150" y="364" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="#2f7f80">Stake center, high council room</text>
+    <text x="150" y="388" text-anchor="middle" font-family="Arial,sans-serif" font-size="9.5" letter-spacing="1" fill="#c9911f">Bring a phone or laptop, or just come watch.</text>`),
+  primary: svgUri(`<rect width="300" height="420" fill="#fff"/>
+    <text x="150" y="66" text-anchor="middle" font-family="Georgia,serif" font-size="22" letter-spacing="2" fill="#222">I WILL CHOOSE</text>
+    <text x="150" y="96" text-anchor="middle" font-family="Georgia,serif" font-size="22" letter-spacing="2" fill="#222">TO SERVE</text>
+    <text x="150" y="140" text-anchor="middle" font-family="Georgia,serif" font-size="38" letter-spacing="2" fill="#222">THE LORD</text>
+    ${[['#4a6fb0',60],['#9bb7d4',105],['#9b7cc4',150],['#8fae6a',195],['#4a6fb0',240]].map(([c,x]) => `<circle cx="${x}" cy="196" r="14" fill="#f1cfae"/><path d="M${x-20} 270 q0 -56 20 -58 q20 2 20 58z" fill="${c}"/><rect x="${x-14}" y="236" width="28" height="5" fill="#b0864f"/>`).join('')}
+    <text x="150" y="304" text-anchor="middle" font-family="Georgia,serif" font-size="8.5" letter-spacing="1" fill="#333">AHWATUKEE GROVES AND A NEIGHBORING WARD</text>
+    <text x="150" y="334" text-anchor="middle" font-family="Georgia,serif" font-size="24" letter-spacing="2" fill="#222">PRIMARY PROGRAM</text>
+    <text x="150" y="362" text-anchor="middle" font-family="Georgia,serif" font-size="14" letter-spacing="1" fill="#333">SUNDAY, NOVEMBER 8 AT 10 AM</text>
+    <text x="150" y="382" text-anchor="middle" font-family="Georgia,serif" font-size="10" letter-spacing="1" fill="#555">SACRAMENT MEETING · CHAPEL</text>`),
+  gratitude: svgUri(`<rect width="300" height="420" fill="#fbf3e4"/>
+    ${LEAF(40, 70, -40, '#d9893f')}${LEAF(262, 64, 35, '#c0662f')}${LEAF(70, 52, 10, '#e2b04a')}${LEAF(232, 50, -15, '#d9893f')}
+    <text x="150" y="132" text-anchor="middle" font-family="Georgia,serif" font-size="18" fill="#8a5a2b">Young Women and Young Men</text>
+    <text x="150" y="182" text-anchor="middle" font-family="Georgia,serif" font-size="40" fill="#b5532a">Gratitude</text>
+    <text x="150" y="224" text-anchor="middle" font-family="Georgia,serif" font-size="40" fill="#b5532a">Dinner</text>
+    <text x="150" y="270" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="#333">Wednesday, November 18</text>
+    <text x="150" y="292" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="#333">7:00 PM · Cultural hall</text>
+    <text x="150" y="326" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#555">Bring a side dish and a note of thanks</text>
+    <text x="150" y="344" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#555">for someone in the ward. Families welcome!</text>
+    ${LEAF(120, 404, -20, '#e2b04a')}${LEAF(150, 400, 0, '#c0662f')}${LEAF(180, 404, 20, '#d9893f')}`),
+};
 const FLYER_COLORS = ['#fff59d', '#ffffff', '#ffd8c2', '#d9f0e3', '#e3eefa', '#f3e5f5'];
 
 const ES = {
@@ -335,16 +404,20 @@ function fresh() {
       { id: 'e4', d: '2026-11-07', title: 'Service project: yard cleanup', when: '8:00 to 10:00 AM', place: 'Elliot Rd', org: 'eq', link: 'rsvp' },
       { id: 'e5', d: '2026-11-07', title: 'Primary harvest party', when: '11:00 AM', place: 'Cultural hall', org: 'primary' },
       { id: 'e6', d: '2026-11-11', title: 'Youth: Veterans Day flag service', when: '6:30 PM', place: 'Stake center', org: 'youth' },
-      { id: 'e7', major: true, d: '2026-11-12', title: 'Temple night', when: '7:00 PM', place: 'Mesa Temple', org: 'ward' },
+      { id: 'e7', major: true, img: FLYER_IMG.temple, d: '2026-11-12', title: 'Temple night', when: '7:00 PM', place: 'Mesa Temple', org: 'ward' },
       { id: 'e8', major: true, d: '2026-11-15', title: 'Tithing declaration begins', when: 'Book a time with the bishop', place: "Bishop's office", org: 'ward', link: 'tithing' },
       { id: 'e9', major: true, d: '2026-11-21', title: 'Ward Thanksgiving breakfast', when: '8:00 AM', place: 'Cultural hall', org: 'ward' },
-      { id: 'e10', major: true, d: '2026-12-05', title: 'Ward Christmas party', when: '6:00 PM', place: 'Cultural hall', org: 'ward' },
+      { id: 'e11', major: true, img: FLYER_IMG.names, d: '2026-11-22', title: 'Temple family names clinic', when: '2:00 PM', place: 'Stake center, high council room', org: 'ward' },
+      { id: 'e10', major: true, img: FLYER_IMG.christmas, d: '2026-12-05', title: 'Ward Christmas party', when: '6:00 PM', place: 'Cultural hall', org: 'ward' },
       { id: 'e11', d: '2026-12-20', title: 'Christmas sacrament program', when: '11:10 AM', place: 'Chapel', org: 'ward' },
       { id: 'e0', d: '2026-10-31', title: 'Primary Halloween parade', when: '10:00 AM', place: 'Church parking lot', org: 'primary' },
     ],
     flyers: [
       { title: 'Harvest Potluck', text: 'Sun Nov 1 · after church. Sign up to bring a dish!', color: '#fff59d', link: 'potluck' },
-      { title: 'Temple Night', text: 'Thu Nov 12 · 7 PM · Mesa Temple', color: '#ffffff' },
+      { title: 'Temple Night', text: 'Thu Nov 12 · 7 PM · Mesa Temple. Meet at the church at 6:15 PM to carpool.', color: '#ffffff', img: FLYER_IMG.temple },
+      { title: 'Temple Family Names Clinic', text: 'Sun Nov 22 · 2 PM · Stake center high council room. Bring a phone or laptop, or just come watch.', color: '#ffffff', img: FLYER_IMG.names },
+      { title: 'Primary Program', text: 'Sun Nov 8 · 10 AM · Chapel. Shared with a neighboring ward.', color: '#ffffff', img: FLYER_IMG.primary },
+      { title: 'Ward Christmas Party', text: 'Sat Dec 5 · 6 PM · Cultural hall. Dinner and a nativity.', color: '#ffffff', img: FLYER_IMG.christmas },
       { title: 'Food drive', text: 'Drop cans in the foyer all month', color: '#d9f0e3' },
       { title: 'Feed the Missionaries', text: 'November still has open nights', color: '#ffd8c2', link: 'missionaries' },
       { title: 'Choir practice', text: 'Sundays after church. All voices welcome.', color: '#e3eefa' },
@@ -425,7 +498,7 @@ function heroHtml() {
   const open = e.link ? `data-go="${e.link}"` : `data-act="pickDay" data-v="${e.d}"`;
   const dots = m.map((_, k) => `<button class="dot ${k === i ? 'on' : ''}" data-act="heroDot" data-v="${k}" aria-label="Show event ${k + 1} of ${m.length}"></button>`).join('');
   return `<div class="hero" aria-roledescription="carousel" aria-label="Major upcoming events">
-    <button class="slide" ${open}><div class="k">${tr('Coming up')} · ${i + 1} of ${m.length}</div><b>${esc(e.title)}</b><div class="w">${dlabel(e.d)} · ${esc(e.when)} · ${esc(e.place)}</div></button>
+    <button class="slide ${e.img ? 'has-img' : ''}" ${open}>${e.img ? `<img class="th" src="${e.img}" alt="">` : ''}<div><div class="k">${tr('Coming up')} · ${i + 1} of ${m.length}</div><b>${esc(e.title)}</b><div class="w">${dlabel(e.d)} · ${esc(e.when)} · ${esc(e.place)}</div></div></button>
     <button class="ar l" data-act="heroStep" data-v="-1" aria-label="Previous event">‹</button><button class="ar r" data-act="heroStep" data-v="1" aria-label="Next event">›</button>
     <div class="ctl">${dots}<button class="pp" data-act="heroPause">${st.heroPaused ? '▶ Play' : '❚❚ Pause'}</button></div></div>`;
 }
@@ -551,7 +624,7 @@ const S = {
       ${signedIn() ? '<button class="btn ghost" data-act="signout">Sign out</button>' : ''}`, 'more'];
   },
   board() {
-    const cards = st.flyers.map((f, i) => `<button class="flyer" style="background:${f.color};transform:rotate(${[-3, 2, 1.5, -2, 2.5, -1.5][i % 6]}deg)" ${f.link ? `data-go="${f.link}"` : `data-act="flyer" data-v="${i}"`}><i class="pin"></i>${f.isNew ? '<span class="new">NEW</span>' : ''}<b>${esc(f.title)}</b><p>${esc(f.text)}</p></button>`).join('');
+    const cards = st.flyers.map((f, i) => `<button class="flyer ${f.img ? 'pic' : ''}" style="background:${f.color};transform:rotate(${[-3, 2, 1.5, -2, 2.5, -1.5][i % 6]}deg)" ${f.link ? `data-go="${f.link}"` : `data-act="flyer" data-v="${i}"`} ${f.img ? `aria-label="${esc(f.title)}. ${esc(f.text)}"` : ''}><i class="pin"></i>${f.isNew ? '<span class="new">NEW</span>' : ''}${f.img ? `<img src="${f.img}" alt="">` : `<b>${esc(f.title)}</b><p>${esc(f.text)}</p>`}</button>`).join('');
     return ['Bulletin Board', 'Flyers and announcements · tap to open', `<div class="board">${cards}</div>`, 'more'];
   },
   talk() {
@@ -579,6 +652,10 @@ const S = {
         <div class="f"><label for="f-date">Event date</label>${inp('date', '', '2026-11-18', 'date')}</div>
         <div class="two f"><div><label for="f-from">From</label>${inp('from', '7:00 PM', '7:00 PM')}</div><div><label for="f-to">To</label>${inp('to', '8:30 PM', '8:30 PM')}</div></div>
         <div class="f"><label for="f-place">Where</label>${inp('place', 'Room or address', 'Cultural hall')}</div>
+        <div class="f"><span class="label">Flyer (optional)</span>
+          ${st.f.img ? `<div class="fprev"><img src="${st.f.img}" alt="Your flyer"><button class="btn ghost" data-act="dropImg">Remove flyer</button></div>`
+            : `<div class="btns"><label class="btn ghost" for="f-img">Add a flyer image</label><button class="btn ghost" data-act="sampleImg">Use a sample flyer</button></div><input class="vh" type="file" id="f-img" accept="image/jpeg,image/png,image/webp">`}
+          <div class="muted" style="font-size:12px;margin-top:6px">Shows on the bulletin board and in the banner. Still fill in the title, date and place: screen readers, search, the printed bulletin and text alerts use those. No photos of children or youth without a parent's permission.</div></div>
         <div class="f"><span class="label">Also show on</span>${ck('sBul', 'Printed bulletin', true)}${ck('sCal', 'Ward calendar', true)}${ck('sOrg', "The organization's page", true)}${ck('sTxt', `Text alert to the ${st.texting.people} people who signed up (about $${(st.texting.people * TEXT_COST).toFixed(2)} of the ward's texting budget)`, false)}</div>
         <button class="btn" data-act="submit">Send for approval</button></div>`, 'more'];
   },
@@ -586,6 +663,7 @@ const S = {
     const items = st.pending.map(p => `<div class="card"><span class="tag t-pend">Pending</span>
       <h3 style="margin-top:6px">${esc(p.title)}</h3><div style="color:var(--link);font-weight:600;font-size:13.5px">${dlabel(p.d)} · ${esc(p.from)} to ${esc(p.to)} · ${esc(p.place)}</div>
       <div class="muted" style="margin:6px 0">${esc(p.details)}</div>
+      ${p.img ? `<div class="fprev" style="margin:8px 0"><img src="${p.img}" alt="Flyer for ${esc(p.title)}"><div class="muted" style="font-size:12px">Check the flyer: the date and place match, it's easy to read, and any photos of youth have a parent's permission.</div></div>` : ''}
       <div class="muted" style="font-size:12px">From ${SUBMIT_ORGS.find(o => o[0] === p.org)[1]} · sent just now · will show on ${p.show.join(', ')}</div>
       ${p.org !== 'youth' ? `<div class="muted" style="font-size:12px;margin-top:4px"><i>In the real portal this goes to the ${ORG[p.org]} leaders. Shown here for the demo.</i></div>` : ''}
       <label class="check" style="margin-top:10px"><input type="checkbox" data-f="major-${p.id}" ${val('major-' + p.id, true) ? 'checked' : ''}><span>Major event: show it in the rotating banner on Home and the bulletin</span></label>
@@ -780,24 +858,26 @@ const A = {
   pickDay(v) { st.cal.day = v; st.cal.month = v.slice(0, 7); if (cur()[0] !== 'calendar') st.stack = [['calendar']]; },
   seeCal(v) { st.cal.day = v; st.cal.month = v.slice(0, 7); st.cal.filter = 'all'; st.stack = [['calendar']]; },
   post() { const t = (st.f.post || '').trim(); if (!t) return toast('Type a thought or question first.'); st.myPosts.push(t); st.f.post = ''; toast('Sent to the teacher for review.'); },
-  flyer(v) { const f = st.flyers[v]; sheet(`<h3>${esc(f.title)}</h3><p class="muted">${esc(f.text)}</p><button class="btn" data-act="close">Close</button>`); },
+  flyer(v) { const f = st.flyers[v]; sheet(`${f.img ? `<img class="fbig" src="${f.img}" alt="Flyer for ${esc(f.title)}">` : ''}<h3>${esc(f.title)}</h3><p class="muted">${esc(f.text)}</p><button class="btn" data-act="close">Close</button>`); },
   submit() {
     const f = st.f, title = (val('title', 'Youth Gratitude Dinner')).trim(), d = val('date', '2026-11-18');
     if (!title) return toast('Add a title first.');
     if (!/^2026-1[0-2]-\d\d$/.test(d)) return toast('Pick a date in October to December 2026 for the demo.');
     const show = [['sBul', 'bulletin', true], ['sCal', 'calendar', true], ['sOrg', 'organization page', true], ['sTxt', 'text alert', false]].filter(([k, , dd]) => val(k, dd)).map(x => x[1]);
     const org = val('org', 'youth');
-    st.pending.push({ id: 'p' + Date.now(), org, title, details: val('details', 'Youth 11 to 18 and their families. Bring a side dish and a note of thanks for someone in the ward.'), d, from: val('from', '7:00 PM'), to: val('to', '8:30 PM'), place: val('place', 'Cultural hall'), show: show.length ? show : ['bulletin'] });
+    st.pending.push({ id: 'p' + Date.now(), org, title, details: val('details', 'Youth 11 to 18 and their families. Bring a side dish and a note of thanks for someone in the ward.'), d, from: val('from', '7:00 PM'), to: val('to', '8:30 PM'), place: val('place', 'Cultural hall'), img: st.f.img || null, show: show.length ? show : ['bulletin'] });
     st.f = { submitted: org };
   },
   submitAgain() { st.f = {}; },
+  sampleImg() { st.f.img = FLYER_IMG.gratitude; },
+  dropImg() { st.f.img = null; },
   approveIt(v) {
     const p = st.pending.find(x => x.id === v); st.pending = st.pending.filter(x => x.id !== v);
     p.ok = true; st.decided.unshift(p);
     const major = !!val('major-' + p.id, true);
-    if (p.show.includes('calendar') || major) st.events.push({ id: p.id, d: p.d, title: p.title, when: `${p.from} to ${p.to}`, place: p.place, org: p.org, major });
+    if (p.show.includes('calendar') || major) st.events.push({ id: p.id, d: p.d, title: p.title, when: `${p.from} to ${p.to}`, place: p.place, org: p.org, major, img: p.img });
     if (major) st.hero = majors().findIndex(e => e.id === p.id);
-    st.flyers.unshift({ title: p.title, text: `${dlabel(p.d)} · ${p.from}. ${p.details}`, color: FLYER_COLORS[st.decided.length % 6], isNew: true });
+    st.flyers.unshift({ title: p.title, text: `${dlabel(p.d)} · ${p.from}. ${p.details}`, color: FLYER_COLORS[st.decided.length % 6], img: p.img, isNew: true });
     let note = '';
     if (p.show.includes('text alert')) {
       const t = st.texting, cost = t.people * TEXT_COST;
@@ -953,12 +1033,20 @@ phoneEl.addEventListener('change', e => {
   if (t.matches('input[type=checkbox][data-act]')) { A[t.dataset.act](t.dataset.v, t); return render(); }
   if (t.dataset.f) st.f[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value;
 });
+phoneEl.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id !== 'f-img' || !t.files[0]) return;
+  if (t.files[0].size > 10e6) return toast('That image is over 10 MB. Try a smaller one.');
+  const rd = new FileReader();
+  rd.onload = () => { st.f.img = rd.result; render(); };
+  rd.readAsDataURL(t.files[0]);
+});
 phoneEl.addEventListener('input', e => { const t = e.target; if (t.dataset.f && t.type !== 'checkbox') st.f[t.dataset.f] = t.value; });
 
 /* guide */
 const FLOWS = [
   ['Sunday morning', 'A member finds the program and their class', 'member', [['home']], ['The banner at the top rotates the big events every 6 seconds; try the arrows or Pause', 'Tap <b>Open the program</b>, or the Sunday tab', 'Tap <b>Where do I go?</b>', 'Pick an age group and tap a class to see its room', 'Try the <b>ES</b> button on Home for Spanish']],
-  ['Post an announcement', 'From a member’s idea to the calendar, with approval', 'member', [['more'], ['submit']], ['As a ward member, tick <b>Text alert</b> and tap <b>Send for approval</b>', 'Switch to <b>Young Women president</b> and note the texting budget meter', 'Leave <b>Major event</b> ticked and tap <b>Approve</b>', 'The meter passes 80%; the event is now in the Home banner, the Calendar (Nov 18) and the Bulletin board']],
+  ['Post an announcement', 'From a member’s idea to the calendar, with approval', 'member', [['more'], ['submit']], ['As a ward member, tap <b>Use a sample flyer</b> (or add your own image), tick <b>Text alert</b>, and tap <b>Send for approval</b>', 'Switch to <b>Young Women president</b> and note the texting budget meter', 'Leave <b>Major event</b> ticked and tap <b>Approve</b>', 'The meter passes 80%; the event is now in the Home banner, the Calendar (Nov 18) and the Bulletin board']],
   ['Sign up and RSVP', 'Potluck, missionary dinners, tithing declaration', 'member', [['more'], ['signups']], ['Open <b>Harvest Potluck</b> and sign up for a salad', 'Open <b>Feed the Missionaries</b> and take an orange day', 'Book a <b>Tithing Declaration</b> time', 'RSVP to the service project']],
   ['Meet with the bishop', 'Request, booking, and the youth rule', 'member', [['more'], ['appt']], ['As a member, tick the under-18 box and send', 'Switch to <b>Executive secretary</b> and tap an open time', 'Book the request; it waits for a parent', 'Tap the booking and confirm an adult', 'Switch to <b>Bishop</b> and change his hours']],
   ['Stay connected', 'Reminders, notes to missionaries, discussions', 'member', [['more'], ['far']], ['Send a note to a missionary', 'More › <b>Get reminders</b> by text', 'Groups › Sunday School: post a thought for the teacher']],
