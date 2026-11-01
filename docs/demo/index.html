@@ -526,7 +526,7 @@ function fresh() {
       who: 'b', day: '2026-11-08',
       hours: { b: { 0: [780, 900], 2: [1140, 1260] }, c1: { 0: [780, 900], 3: [1140, 1260] }, c2: { 2: [1140, 1260] } }, blockDay: '2026-11-08',
       blocked: { b: { '2026-11-08|2:40': true } },
-      requests: [{ id: 'r1', name: 'Maria R.', times: 'Sun or Wed', youth: false, contact: '(480) 555-0142' }],
+      requests: [{ id: 'r1', name: 'Maria Rojas', times: 'Sun or Wed', youth: false, contact: '(480) 555-0142' }],
       bookings: {
         'b|2026-11-08|1:00': { name: 'Tom K.' },
         'b|2026-11-08|1:40': { name: 'Lee family', kind: 'Youth', parent: true },
@@ -907,7 +907,7 @@ const S = {
     const chips = times.map(t => `<button class="chip" aria-pressed="${sel.includes(t)}" data-act="atime" data-v="${t}">${t}</button>`).join('');
     return ['Meet with the Bishop', 'Ask for an appointment', `
       <div class="lead">Your request goes to the <b>executive secretary</b>, who will call or text you with a time. You don't need to say why.</div>
-      <div class="card">${inp('aname', 'Your name', 'Grace W.')}<div style="height:8px"></div>${inp('acontact', 'Phone or email', '(480) 555-0177')}
+      <div class="card"><label for="f-aname" class="lbl">Your first and last name</label>${inp('aname', 'First and last name', 'Grace Whitfield')}<div style="height:8px"></div>${inp('acontact', 'Phone or email', '(480) 555-0177')}
         <div class="lbl" style="margin:12px 0 6px">Times that suit you</div><div class="chips">${chips}</div>
         <label class="check"><input type="checkbox" data-f="ayouth" ${val('ayouth') ? 'checked' : ''}><span>This is for my son or daughter (under 18). <span class="muted">A parent gets every message and is invited. A parent or another adult will be there; your child chooses whether they join or wait outside.</span></span></label>
         <button class="btn" data-act="appt">Send request</button></div>
@@ -1105,7 +1105,7 @@ const A = {
   unalerts() { st.alerts = null; },
   atime(v) { const s = [...val('atimes', ['Sunday after church'])]; const i = s.indexOf(v); i < 0 ? s.push(v) : s.splice(i, 1); st.f.atimes = s; },
   appt() {
-    const name = val('aname', 'Grace W.').trim(); if (!name) return toast('Add your name first.');
+    const name = val('aname', 'Grace Whitfield').trim(); if (name.split(/\s+/).length < 2) { toast('Please give your first and last name. Some people in the ward share a first name and last initial.'); return 'skip'; }
     const times = val('atimes', ['Sunday after church']);
     const short = times.map(t => t.split(' ')[0].replace('Sunday', 'Sun').replace('Tuesday', 'Tue').replace('Wednesday', 'Wed')).join(' or ') || 'Any time';
     const youth = !!val('ayouth');
@@ -1140,6 +1140,7 @@ const A = {
         if (!c) return '<div class="muted" style="font-size:13px">No contact given.</div>';
         return `<div class="card" style="margin:0 0 10px"><div class="lbl">How to reach ${esc(r.name)}</div><div style="font-weight:700;font-size:15px;margin:2px 0 8px">${esc(c)}</div>
           <div class="btns">${mail ? `<a class="btn ghost" style="text-decoration:none;text-align:center" href="mailto:${esc(c)}">Email</a>` : `<a class="btn ghost" style="text-decoration:none;text-align:center" href="tel:${tel}">Call</a><a class="btn ghost" style="text-decoration:none;text-align:center" href="sms:${tel}">Text</a>`}</div>
+          <div class="muted" style="font-size:12px;margin-top:6px">Two people with the same name? The phone or email tells you which one: look it up in Member Tools or LCR.</div>
           <div class="muted" style="font-size:12px;margin-top:6px">Shown only to the executive secretary and the bishopric. Kept only for the confirmation and reminder, then deleted after the appointment.</div></div>`;
       })()}
       ${r.youth ? '<div class="card note" style="font-size:13px">Youth meeting: the parent is invited, and it confirms once a parent or another adult will be there.</div>' : ''}
