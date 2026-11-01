@@ -1212,7 +1212,7 @@ function render(resetScroll) {
   const badge = { yw: pendingFor(), es: newRequests() }[st.role] || 0;
   const tabs = TABS.map(([k, n]) => `<button class="tab ${k === tab ? 'on' : ''}" data-tab="${k}"><svg viewBox="0 0 24 24">${ICONS[k]}</svg>${tr(n)}${k === 'more' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('');
   phone.innerHTML = `<div class="status"><span>9:41</span><span>Demo · agw.example</span><span>100%</span></div>
-    <div class="appbar">${back}<div class="t"><div class="ward">${tr(title)}</div><div class="sub">${sub}</div></div>${lang}<button class="share" data-act="share" aria-label="Share a link to this page"><svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M5 12v8h14v-8"/></svg></button></div>
+    <div class="appbar">${back}<div class="t"><div class="ward">${tr(title)}</div><div class="sub">${sub}</div></div>${lang}<button class="share" data-act="share" aria-label="Share a link to this page"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button></div>
     <div class="content">${body}</div><nav class="tabbar">${tabs}</nav>
     ${st.sheet ? `<div class="scrim" data-act="close"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${st.sheet}</div></div>` : ''}`;
   fitHero();
