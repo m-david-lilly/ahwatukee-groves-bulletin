@@ -369,8 +369,9 @@ const LEADERS = [
   ['rs', 'Relief Society president', 'Sister Ana P.', 'Ministering, meals, and help in hard times', ['I could use some help', 'Ministering', 'Something else'], 'Our neighbor just had a baby. Could the sisters help with a few meals?'],
 ];
 const BUILDINGS = [
-  ['Tempe Arizona West Stake Center', '1050 W Grove Pkwy, Tempe, AZ 85283', 'Stake conference, youth activities, the family names clinic', true],
-  ['Ahwatukee Groves meetinghouse', '8401 S Hardy Dr, Tempe, AZ 85284', 'Our ward meets here Sundays at 10:00 AM', false],
+  ['Stake Center', '1050 W Grove Pkwy, Tempe, AZ 85283', 'Stake conference, youth activities, the family names clinic', true],
+  ['Knox Building', '4525 E Knox Rd, Phoenix, AZ 85044', '', false],
+  ['Frye Building', '2955 E Frye Rd, Phoenix, AZ 85048', '', false],
 ];
 const mapUrl = a => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a);
 const FLYER_COLORS = ['#fff59d', '#ffffff', '#ffd8c2', '#d9f0e3', '#e3eefa', '#f3e5f5'];
@@ -794,10 +795,10 @@ const S = {
       <p class="muted" style="text-align:center;font-size:12px">Leaders' phone numbers and emails are never shown. In an emergency, call 911.</p>`, 'more'];
   },
   buildings() {
-    const rows = BUILDINGS.map(([n, a, use, sc]) => `<a class="far" href="${mapUrl(a)}" target="_blank" rel="noopener" aria-label="${esc(n)}${sc ? ' (stake center)' : ''}, ${esc(a)}. Open in Google Maps"><div class="txt"><b>${esc(n)}</b>${sc ? '<span class="first">Stake center</span>' : ''}<div class="muted">${esc(a)}</div><div class="muted" style="font-size:12px">${esc(use)}</div></div><span class="sendn">Map ›</span></a>`).join('');
+    const rows = BUILDINGS.map(([n, a, use, sc]) => `<a class="far" href="${mapUrl(a)}" target="_blank" rel="noopener" aria-label="${esc(n)}${sc ? ' (stake center)' : ''}, ${esc(a)}. Open in Google Maps"><div class="txt"><b>${esc(n)}</b>${sc ? '<span class="first">Stake center</span>' : ''}<div class="muted">${esc(a)}</div>${use ? `<div class="muted" style="font-size:12px">${esc(use)}</div>` : ''}</div><span class="sendn">Map ›</span></a>`).join('');
     return ['Stake buildings', 'Tempe Arizona West Stake', `
       <div class="card list">${rows}</div>
-      <p class="muted" style="text-align:center;font-size:12px">Tap a building to open it in Google Maps. The real list has every building in the stake; the clerk keeps it up to date.</p>`, 'more'];
+      <p class="muted" style="text-align:center;font-size:12px">Tap a building to open it in Google Maps for directions.</p>`, 'more'];
   },
   alerts() {
     if (st.alerts) return ['Get Reminders', 'By text or email', `<div class="card good"><h3 style="color:var(--ok)">You're signed up</h3><div style="font-size:13.5px">Reminders for ${esc(st.alerts.join(', '))}. Reply STOP to any text to end them.</div></div>
