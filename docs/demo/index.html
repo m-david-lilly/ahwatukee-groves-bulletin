@@ -128,6 +128,12 @@ textarea.in { resize: vertical; min-height: 76px; }
 .chip { font-size: 12.5px; border: 1px solid var(--rule); background: var(--card); border-radius: 999px; padding: 5px 11px; }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .check { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; margin: 4px 0 10px; }
+.hrow { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--rule); }
+.hrow:last-of-type { border: 0; }
+.hrow .check { margin: 0; }
+.hrow .rng { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+.hrow select.in { padding: 5px 6px; font-size: 13px; width: auto; flex: 1; min-width: 0; }
+.hrow .off { font-size: 12.5px; color: var(--muted); }
 .check input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
 .who { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; padding: 5px 0; border-bottom: 1px solid var(--rule); }
 .who:last-child { border: 0; }
@@ -310,8 +316,15 @@ const ROLES = {
   bishop: ['Bishop', 'Sets his hours'],
 };
 const PEOPLE = { b: 'Bishop', c1: '1st counselor', c2: '2nd counselor' };
-const APPT_DAYS = [['2026-11-08', 'sun'], ['2026-11-10', 'tue'], ['2026-11-11', 'wed']];
-const HOURS = { sun: ['Sun', '1 to 3 PM', ['1:00', '1:20', '1:40', '2:00', '2:20', '2:40']], tue: ['Tue', '7 to 9 PM', ['7:00', '7:20', '7:40', '8:00', '8:20', '8:40']], wed: ['Wed', '7 to 9 PM', ['7:00', '7:20', '7:40', '8:00', '8:20', '8:40']] };
+const APPT_WEEK = ['2026-11-08', '2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14'];
+const SLOT = 20; // minutes per appointment
+const t12 = m => `${(Math.floor(m / 60) + 11) % 12 + 1}:${String(m % 60).padStart(2, '0')}`;
+const ap = m => (m < 720 ? 'AM' : 'PM');
+const slotKey = m => t12(m) + (m < 720 ? ' AM' : ''); // matches the '1:00' style keys; morning times say AM
+const rangeLabel = ([s, e]) => `${t12(s).replace(':00', '')}${ap(s) !== ap(e) ? ' ' + ap(s) : ''} to ${t12(e).replace(':00', '')} ${ap(e)}`;
+const slotsOf = ([s, e]) => { const o = []; for (let m = s; m + SLOT <= e; m += SLOT) o.push(slotKey(m)); return o; };
+const TIME_OPTS = Array.from({ length: 33 }, (_, i) => 360 + i * 30); // 6:00 AM to 10:00 PM
+const hoursText = h => Object.keys(h).sort().map(d => `${DOW[d]} ${rangeLabel(h[d])}`).join(', ') || 'none set';
 const TITHING_TIMES = ['9:00', '9:15', '9:30', '9:45', '10:00', '10:15', '10:30', '10:45'];
 const svgUri = x => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420">${x}</svg>`);
 const PUMPKIN = (x, y, k) => `<g transform="translate(${x} ${y}) scale(${k})"><path d="M-6 -46 q4 -18 16 -24" stroke="#6b4a2b" stroke-width="7" fill="none" stroke-linecap="round"/>
@@ -511,7 +524,7 @@ function fresh() {
     myPosts: [], notes: 0, alerts: null, linkSent: false,
     appt: {
       who: 'b', day: '2026-11-08',
-      hours: { b: { sun: true, tue: true, wed: false }, c1: { sun: true, tue: false, wed: true }, c2: { sun: false, tue: true, wed: false } },
+      hours: { b: { 0: [780, 900], 2: [1140, 1260] }, c1: { 0: [780, 900], 3: [1140, 1260] }, c2: { 2: [1140, 1260] } }, blockDay: '2026-11-08',
       blocked: { b: { '2026-11-08|2:40': true } },
       requests: [{ id: 'r1', name: 'Maria R.', times: 'Sun or Wed', youth: false }],
       bookings: {
@@ -880,36 +893,42 @@ const S = {
     const a = st.appt;
     const reqs = a.requests.map(r => `<div class="who"><span>${esc(r.name)}${r.youth ? '<span class="yt">Youth</span>' : ''}</span><span class="muted">${esc(r.times)}</span></div>`).join('');
     const pchips = Object.entries(PEOPLE).map(([k, n]) => `<button class="chip" aria-pressed="${a.who === k}" data-act="apWho" data-v="${k}">${n}</button>`).join('');
-    const dchips = APPT_DAYS.map(([d]) => `<button class="chip" aria-pressed="${a.day === d}" data-act="apDay" data-v="${d}">${dlabel(d)}</button>`).join('');
-    const hk = APPT_DAYS.find(x => x[0] === a.day)[1];
-    const on = a.hours[a.who][hk];
+    const h = a.hours[a.who], days = APPT_WEEK.filter(d => h[dt(d).getDay()]);
+    if (days.length && !days.includes(a.day)) a.day = days[0];
+    const dchips = days.map(d => `<button class="chip" aria-pressed="${a.day === d}" data-act="apDay" data-v="${d}">${dlabel(d)}</button>`).join('');
+    const on = h[dt(a.day).getDay()];
     let slots = '';
-    if (!on) slots = `<div class="empty">The ${PEOPLE[a.who].toLowerCase()} isn't available on ${DOWL[dt(a.day).getDay()]}s.</div>`;
-    else slots = HOURS[hk][2].map(t => {
+    if (!days.length) slots = `<div class="empty">The ${PEOPLE[a.who].toLowerCase()} hasn't set any hours yet.</div>`;
+    else slots = slotsOf(on).map(t => {
       const key = `${a.who}|${a.day}|${t}`, b = a.bookings[key];
       if (a.blocked[a.who]?.[`${a.day}|${t}`]) return `<div class="slot off"><span>${t}</span><span>Blocked</span></div>`;
       if (b) return `<button class="slot booked" data-act="apOpen" data-v="${key}"><span>${t} &nbsp;${esc(b.name)}${b.kind ? `<span class="yt">${b.kind}</span>` : ''}</span><span class="muted">${b.kind ? (b.parent ? 'Adult confirmed' : '<b style="color:var(--terra)">Waiting for parent</b>') : 'Booked'}</span></button>`;
       return `<button class="slot free" data-act="apFree" data-v="${key}"><span>${t}</span><span>${a.requests.length ? 'Book a request' : 'Open'}</span></button>`;
     }).join('');
-    const hrs = Object.entries(a.hours[a.who]).filter(([, v]) => v).map(([k]) => `${HOURS[k][0]} ${HOURS[k][1]}`).join(', ') || 'none set';
+    const hrs = hoursText(h);
     return ["Bishop's Appointments", 'Signed in as executive secretary', `
       <div class="card note"><b>November reminder:</b> <span class="muted">check LCR's Action and Interview List for youth meetings that are due, 11-year-olds moving up, and children turning 8 in December, then book them here. The portal keeps no list of children or youth.</span></div>
       <div class="card"><div class="sec"><h3>New requests</h3><span class="cnt">${a.requests.length}</span></div>${reqs || '<div class="empty">No new requests.</div>'}</div>
       <div class="chips">${pchips}</div><div class="chips">${dchips}</div>
-      <div class="card"><h3>${dlong(a.day)} · ${PEOPLE[a.who]}</h3>${slots}
+      <div class="card"><h3>${days.length ? dlong(a.day) + ' · ' : ''}${PEOPLE[a.who]}</h3>${slots}
         <div class="muted" style="margin-top:6px;font-size:12px">Times set by the ${PEOPLE[a.who].toLowerCase()}: ${hrs}. Entries show a name and time only and are deleted 30 days later.</div></div>
       <button class="btn ghost" data-act="apAdd">Book someone from LCR's list</button>`, 'more'];
   },
   myhours() {
     const a = st.appt, mine = Object.entries(a.bookings).filter(([k]) => k.startsWith('b|')).sort(([x], [y]) => x.localeCompare(y));
     const list = mine.map(([k, b]) => { const [, d, t] = k.split('|'); return `<div class="who"><span>${dlabel(d)} · ${t}</span><span>${esc(b.name)}${b.kind ? `<span class="yt">${b.kind}</span>` : ''}</span></div>`; }).join('');
-    const tog = Object.entries(HOURS).map(([k, [d, h]]) => `<label class="check"><input type="checkbox" data-act="hour" data-v="${k}" ${a.hours.b[k] ? 'checked' : ''}><span><b>${d}</b> ${h}</span></label>`).join('');
-    const blk = HOURS.sun[2].map(t => { const k = `2026-11-08|${t}`; const isB = a.blocked.b?.[k]; const bk = a.bookings[`b|${k}`];
+    const h = a.hours.b, opt = (v, min, max) => TIME_OPTS.filter(m => m >= min && m <= max).map(m => `<option value="${m}" ${m === v ? 'selected' : ''}>${t12(m)} ${ap(m)}</option>`).join('');
+    const tog = DOWL.map((name, d) => `<div class="hrow"><label class="check"><input type="checkbox" data-act="hourDay" data-v="${d}" ${h[d] ? 'checked' : ''}><span><b>${DOW[d]}</b></span></label>
+      ${h[d] ? `<div class="rng"><select class="in" data-act="hourFrom" data-v="${d}" aria-label="${name} from">${opt(h[d][0], 360, 1290)}</select>to<select class="in" data-act="hourTo" data-v="${d}" aria-label="${name} until">${opt(h[d][1], h[d][0] + 30, 1320)}</select></div>` : '<span class="off">Not available</span>'}</div>`).join('');
+    const bdays = APPT_WEEK.filter(d => h[dt(d).getDay()]);
+    if (!bdays.includes(a.blockDay)) a.blockDay = bdays[0];
+    const bchips = bdays.map(d => `<button class="chip" aria-pressed="${a.blockDay === d}" data-act="blockDay" data-v="${d}">${dlabel(d)}</button>`).join('');
+    const blk = !a.blockDay ? '' : slotsOf(h[dt(a.blockDay).getDay()]).map(t => { const k = `${a.blockDay}|${t}`; const isB = a.blocked.b?.[k]; const bk = a.bookings[`b|${k}`];
       return `<button class="chip" aria-pressed="${!!isB}" ${bk ? 'disabled title="Booked"' : ''} data-act="block" data-v="${k}">${t}${bk ? ' ●' : ''}</button>`; }).join('');
     return ['My Appointments', 'Signed in as bishop', `
       <div class="card"><h3>Coming up</h3>${list || '<div class="empty">Nothing booked.</div>'}</div>
-      <div class="card"><h3>When I'm available each week</h3>${tog}<div class="muted" style="font-size:12px">Brother Roe books into these times. Changes show up for him right away.</div></div>
-      <div class="card"><h3>Block a time: Sun, Nov 8</h3><div class="chips">${blk}</div><div class="muted" style="font-size:12px">Tap a time to block or unblock it. ● means it's already booked.</div></div>
+      <div class="card"><h3>When I'm available each week</h3>${tog}<div class="muted" style="font-size:12px;margin-top:8px">Pick your days and times. Appointments are ${SLOT} minutes. Brother Roe books into these times, and changes show up for him right away.</div></div>
+      <div class="card"><h3>Block a time next week</h3>${bdays.length ? `<div class="chips">${bchips}</div><div class="chips">${blk}</div><div class="muted" style="font-size:12px">Tap a time to block or unblock it. ● means it's already booked.</div>` : '<div class="empty">Set some hours first.</div>'}</div>
       <div class="card info"><span class="muted">Your counselors set their own hours the same way. No reasons or notes are ever kept.</span></div>`, 'more'];
   },
   signin() {
@@ -1078,7 +1097,16 @@ const A = {
   apRemind() { st.sheet = null; toast('Reminder sent: "Your appointment Sunday at the church." No reason is ever included.'); },
   apCancel(v) { delete st.appt.bookings[v]; st.sheet = null; toast('Cancelled. They were told by text.'); },
   apAdd() { toast('Tap any open time below to book someone.'); },
-  hour(v, el) { st.appt.hours.b[v] = el.checked; toast(el.checked ? 'Added to your weekly hours.' : 'Removed from your weekly hours.'); },
+  hourDay(v, el) {
+    const h = st.appt.hours.b, d = Number(v);
+    if (el.checked) { h[d] = d === 0 ? [780, 900] : [1140, 1260]; return toast(`${DOWL[d]}s added. Set the times next to it.`); }
+    delete h[d];
+    const kept = Object.keys(st.appt.bookings).some(k => k.startsWith('b|') && dt(k.split('|')[1]).getDay() === d);
+    toast(`${DOWL[d]}s removed from your hours.` + (kept ? ' Appointments already booked stay; Brother Roe will move them if needed.' : ''));
+  },
+  hourFrom(v, el) { const r = st.appt.hours.b[v]; r[0] = Number(el.value); if (r[1] < r[0] + 30) r[1] = Math.min(r[0] + 60, 1320); },
+  hourTo(v, el) { st.appt.hours.b[v][1] = Number(el.value); },
+  blockDay(v) { st.appt.blockDay = v; },
   block(v) { const b = st.appt.blocked.b ||= {}; b[v] ? delete b[v] : (b[v] = true); },
   link() { const e = val('email', 'karen@example.com').trim(); if (!/.+@.+\..+/.test(e)) return toast('Enter an email address like name@example.com.'); st.linkSent = true; },
   as(v) { setRole(v, true); return 'skip'; },
@@ -1202,7 +1230,7 @@ phoneEl.addEventListener('click', e => {
   const t = e.target.closest('[data-go],[data-tab],[data-back],[data-act]');
   if (!t || !phoneEl.contains(t)) return;
   if (t.classList.contains('scrim') && e.target !== t) return;
-  if (t.matches('input[type=checkbox][data-act]')) return;
+  if (t.matches('input[type=checkbox][data-act], select[data-act]')) return;
   if (t.dataset.go) return go(t.dataset.go);
   if (t.dataset.tab) { st.stack = [[t.dataset.tab]]; st.sheet = null; if (t.dataset.tab === 'calendar') { st.cal.month = st.cal.day.slice(0, 7); } return render(true); }
   if ('back' in t.dataset) {
@@ -1217,7 +1245,7 @@ phoneEl.addEventListener('click', e => {
 });
 phoneEl.addEventListener('change', e => {
   const t = e.target;
-  if (t.matches('input[type=checkbox][data-act]')) { A[t.dataset.act](t.dataset.v, t); return render(); }
+  if (t.matches('input[type=checkbox][data-act], select[data-act]')) { A[t.dataset.act](t.dataset.v, t); return render(); }
   if (t.dataset.f) st.f[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value;
 });
 phoneEl.addEventListener('change', e => {
@@ -1235,7 +1263,7 @@ const FLOWS = [
   ['Sunday morning', 'A member finds the program and their class', 'member', [['home']], ['The banner at the top rotates the big events every 6 seconds; try the arrows or Pause', 'Tap <b>Open the program</b>, or the Sunday tab', 'Tap <b>Where do I go?</b>', 'Pick an age group and tap a class to see its room', 'Tap <b>EN ▾</b> on Home and pick <b>Español</b>, then <b>Diné bizaad</b> for a Navajo sample']],
   ['Post an announcement', 'From a member’s idea to the calendar, with approval', 'member', [['more'], ['submit']], ['As a ward member, tap <b>Use a sample flyer</b> (or add your own image), tick <b>Text alert</b>, and tap <b>Send for approval</b>', 'Switch to <b>Young Women president</b> and note the texting budget meter', 'Leave <b>Major event</b> ticked and tap <b>Approve</b>', 'The meter passes 80%; the event is now in the Home banner, the Calendar (Nov 18) and the Bulletin board']],
   ['Sign up and RSVP', 'Potluck, missionary dinners, tithing declaration', 'member', [['more'], ['signups']], ['Open <b>Harvest Potluck</b> and sign up for a salad', 'Open <b>Feed the Missionaries</b> and take an orange day', 'Book a <b>Tithing Declaration</b> time', 'RSVP to the service project']],
-  ['Meet with the bishop', 'Request, booking, and the youth rule', 'member', [['more'], ['appt']], ['As a member, tick the under-18 box and send', 'Switch to <b>Executive secretary</b> and tap an open time', 'Book the request; it waits for a parent', 'Tap the booking and confirm an adult', 'Switch to <b>Bishop</b> and change his hours']],
+  ['Meet with the bishop', 'Request, booking, and the youth rule', 'member', [['more'], ['appt']], ['As a member, tick the under-18 box and send', 'Switch to <b>Executive secretary</b> and tap an open time', 'Book the request; it waits for a parent', 'Tap the booking and confirm an adult', 'Switch to <b>Bishop</b>: pick his days and set the start and end times for each']],
   ['Stay connected', 'Reminders, notes to missionaries, discussions', 'member', [['more'], ['far']], ['Send a note to a missionary', 'More › <b>Contact a leader</b>: report a problem to the building coordinator', 'More › <b>Stake buildings</b>: find the stake center and open it in Maps', 'More › <b>Get reminders</b> by text', 'Groups › Sunday School: post a thought for the teacher']],
 ];
 function renderGuide() {
