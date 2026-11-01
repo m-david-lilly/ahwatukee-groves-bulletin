@@ -369,10 +369,18 @@ const LEADERS = [
   ['rs', 'Relief Society president', 'Sister Ana P.', 'Ministering, meals, and help in hard times', ['I could use some help', 'Ministering', 'Something else'], 'Our neighbor just had a baby. Could the sisters help with a few meals?'],
 ];
 const BUILDINGS = [
-  ['Stake Center', '1050 W Grove Pkwy, Tempe, AZ 85283', 'Stake conference, youth activities, the family names clinic', true, 'https://maps.app.goo.gl/NDSFBXbYdJXjuHp76'],
-  ['Knox Building', '4525 E Knox Rd, Phoenix, AZ 85044', '', false, 'https://maps.app.goo.gl/UCYfAjNKxLXpnbaNA'],
-  ['Frye Building', '2955 E Frye Rd, Phoenix, AZ 85048', '', false, 'https://maps.app.goo.gl/Gx9LtzEUMHN3DiDZA'],
+  ['Stake Center', '1050 W Grove Pkwy, Tempe, AZ 85283', 'Stake conference and youth activities. Temple recommend interviews 2nd Sundays, 1:30 PM', true, 'https://maps.app.goo.gl/NDSFBXbYdJXjuHp76'],
+  ['Knox Building', '4525 E Knox Rd, Phoenix, AZ 85044', 'Temple recommend interviews 3rd Sundays, 1:30 PM', false, 'https://maps.app.goo.gl/UCYfAjNKxLXpnbaNA'],
+  ['Frye Building', '2955 E Frye Rd, Phoenix, AZ 85048', 'Temple recommend interviews 4th Sundays, 1:30 PM', false, 'https://maps.app.goo.gl/Gx9LtzEUMHN3DiDZA'],
 ];
+// stake temple recommend interviews: 2nd, 3rd and 4th Sundays at 1:30 PM, rotating among BUILDINGS
+const TRI = [[2, 0], [3, 1], [4, 2]];
+function triEvents() {
+  return [9, 10, 11].flatMap(m => TRI.map(([n, b]) => {
+    const day = 1 + (7 - new Date(2026, m, 1).getDay()) % 7 + 7 * (n - 1);
+    return { id: `tri-${m}-${n}`, d: `2026-${m + 1}-${String(day).padStart(2, '0')}`, title: 'Stake temple recommend interviews', when: '1:30 PM', place: BUILDINGS[b][0], org: 'ward', link: 'buildings' };
+  }));
+}
 const mapUrl = a => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a);
 const FLYER_COLORS = ['#fff59d', '#ffffff', '#ffd8c2', '#d9f0e3', '#e3eefa', '#f3e5f5'];
 
@@ -434,10 +442,11 @@ function fresh() {
       { id: 'e7', major: true, img: FLYER_IMG.temple, d: '2026-11-12', title: 'Temple night', when: '7:00 PM', place: 'Mesa Temple', org: 'ward' },
       { id: 'e8', major: true, d: '2026-11-15', title: 'Tithing declaration begins', when: 'Book a time with the bishop', place: "Bishop's office", org: 'ward', link: 'tithing' },
       { id: 'e9', major: true, d: '2026-11-21', title: 'Ward Thanksgiving breakfast', when: '8:00 AM', place: 'Cultural hall', org: 'ward' },
-      { id: 'e11', major: true, img: FLYER_IMG.names, d: '2026-11-22', title: 'Temple family names clinic', when: '2:00 PM', place: 'Stake center, high council room', org: 'ward' },
+      { id: 'e12', major: true, img: FLYER_IMG.names, d: '2026-11-22', title: 'Temple family names clinic', when: '2:00 PM', place: 'Stake center, high council room', org: 'ward' },
       { id: 'e10', major: true, img: FLYER_IMG.christmas, d: '2026-12-05', title: 'Ward Christmas party', when: '6:00 PM', place: 'Cultural hall', org: 'ward' },
       { id: 'e11', d: '2026-12-20', title: 'Christmas sacrament program', when: '11:10 AM', place: 'Chapel', org: 'ward' },
       { id: 'e0', d: '2026-10-31', title: 'Primary Halloween parade', when: '10:00 AM', place: 'Church parking lot', org: 'primary' },
+      ...triEvents(),
     ],
     flyers: [
       { title: 'Harvest Potluck', text: 'Sun Nov 1 · after church. Sign up to bring a dish!', color: '#fff59d', link: 'potluck' },
@@ -796,7 +805,11 @@ const S = {
   },
   buildings() {
     const rows = BUILDINGS.map(([n, a, use, sc, u]) => `<a class="far" href="${u || mapUrl(a)}" target="_blank" rel="noopener" aria-label="${esc(n)}${sc ? ' (stake center)' : ''}, ${esc(a)}. Open in Google Maps"><div class="txt"><b>${esc(n)}</b>${sc ? '<span class="first">Stake center</span>' : ''}<div class="muted">${esc(a)}</div>${use ? `<div class="muted" style="font-size:12px">${esc(use)}</div>` : ''}</div><span class="sendn">Map ›</span></a>`).join('');
+    const tri = st.events.filter(e => e.id.startsWith('tri-') && e.d >= TODAY).sort((a, b) => a.d.localeCompare(b.d))[0];
     return ['Stake buildings', 'Tempe Arizona West Stake', `
+      <div class="card"><div class="lbl">Stake temple recommend interviews</div><h3>Sundays at 1:30 PM</h3>
+        <div class="muted">2nd Sunday: Stake Center · 3rd: Knox Building · 4th: Frye Building</div>
+        ${tri ? `<div style="margin-top:6px;font-weight:600">Next: ${dlabel(tri.d)} at the ${esc(tri.place)}</div>` : ''}</div>
       <div class="card list">${rows}</div>
       <p class="muted" style="text-align:center;font-size:12px">Tap a building to open it in Google Maps for directions.</p>`, 'more'];
   },
