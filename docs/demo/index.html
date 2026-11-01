@@ -392,9 +392,28 @@ const ES = {
   'Ahwatukee Groves Ward': 'Barrio Ahwatukee Groves', 'Just posted': 'Recién publicado',
   'Fast and testimony meeting': 'Reunión de ayuno y testimonios', 'Classes 10:00 AM · Sacrament meeting 11:10 AM': 'Clases 10:00 a. m. · Reunión sacramental 11:10 a. m.',
 };
-// Navajo (Diné bizaad): only words we're confident of; the rest falls back to English until a Navajo speaker in the ward checks and adds them
+// Navajo (Diné bizaad): machine-translated with polytranslator.com (Advanced) for the demo; a Navajo speaker in the ward should check it.
+// Anything missing falls back to English.
 const NV = {
-  Home: 'Hooghan', Sunday: 'Damóo', 'This Sunday': 'Díí Damóo', 'Where do I go?': 'Háágóó deeshááł?',
+  'Coming up': 'Náásgóó ádahodooníłígíí',
+  'This week and next': 'Díí damǫ́ǫgo dóó náánáłahjį́',
+  'This Sunday': 'Díí Damǫ́ǫgo',
+  'Open the program': 'Naaltsoos bee ádahodooníłígíí ąą ánílééh',
+  'Where do I go?': 'Háágóósh deesháał?',
+  'See the full calendar': 'Yoołkáłígíí tʼáá átʼé bee hólǫ́nígíí nínílʼį́',
+  'New talk shared': 'Yáłtiʼígíí ániidígíí baa dahaneʼ',
+  'Quick links': 'Tsį́į́ł bee íhootʼaahígíí',
+  'Sign-ups': 'Ízhiʼ bee álʼįįgi',
+  'Meet with the bishop': 'Bishop bił ahidiʼnoolnish',
+  'Far From Home': 'Hooghandóó Nízaadgóó',
+  'Bulletin board': 'Naaltsoos bee ił haneʼ bikááʼ dah sinilígíí',
+  Home: 'Hooghan',
+  Sunday: 'Damǫ́ǫ',
+  Calendar: 'Yoołkáłígíí',
+  Groups: 'Ałah ádaatʼéhígíí',
+  More: 'Náánáłahgo',
+  'Just posted': 'Kʼad ániidígo bee haneʼ',
+  'Fast and testimony meeting': 'Chʼiiyáán dooda dóó oodląʼ baa yátiʼ áłah náʼádleehígíí',
 };
 const LANGS = { en: ['EN', 'English'], es: ['ES', 'Español'], nv: ['DINÉ', 'Diné bizaad (Navajo)'] };
 const tr = s => (st.lang === 'es' && ES[s]) || (st.lang === 'nv' && NV[s]) || s;
@@ -557,7 +576,7 @@ const S = {
     const fresh = st.decided.filter(p => p.ok).map(p => st.events.find(e => e.id === p.id)).filter(Boolean);
     const just = fresh.length ? `<div class="card" style="border-color:var(--ok)"><h3>${tr('Just posted')} <span class="tag t-ok">New</span></h3>${fresh.map(evRow).join('')}</div>` : '';
     const quick = `<div class="card list">${nav('signups', tr('Sign-ups'), 'Potluck, missionaries, tithing declaration', '✓', 'eq')}${nav('appt', tr('Meet with the bishop'), 'Ask for an appointment', 'B', 'youth')}${nav('board', tr('Bulletin board'), 'Flyers and announcements', '▦', 'ward')}${nav('far', tr('Far From Home'), 'Send a note to a missionary', '✉', 'rs')}</div>`;
-    const nvNote = st.lang === 'nv' ? `<div class="card info"><b>Yáʼátʼééh!</b> <span class="muted">A sample of Diné bizaad (Navajo). Only a few words are translated so far; anything not yet translated shows in English until a Navajo speaker in the ward checks and adds it.</span></div>` : '';
+    const nvNote = st.lang === 'nv' ? `<div class="card info"><b>Yáʼátʼééh!</b> <span class="muted">A sample of Diné bizaad (Navajo), machine-translated for this demo and not yet checked by a Navajo speaker. Anything not yet translated shows in English.</span></div>` : '';
     return ['Ahwatukee Groves Ward', st.lang === 'es' ? 'Estaca Tempe Arizona West' : 'Tempe Arizona West Stake', `${nvNote}${heroHtml()}${sun}
       ${just}<div class="card"><h3>${tr('This week and next')}</h3>${list}<button class="link" style="margin-top:8px" data-tab="calendar">${tr('See the full calendar')} ›</button></div>
       <div class="grouphd">${tr('Quick links')}</div>${quick}
