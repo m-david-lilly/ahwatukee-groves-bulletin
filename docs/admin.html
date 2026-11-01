@@ -262,6 +262,7 @@
       (a.eventDate ? '<div class="when">' + esc(fmt(a.eventDate) + times(a.startTime, a.endTime)) + '</div>' : '') +
       '<div class="details">' + esc(a.details) + '</div>' +
       (a.contact ? '<div class="small">Printed contact: ' + esc(a.contact) + '</div>' : '') +
+      (a.link ? '<div class="small">Link: <a href="' + esc(a.link) + '" target="_blank" rel="noopener noreferrer">' + esc(a.link) + '</a></div>' : '') +
       '<div class="small">' + esc(runs) + '</div>' +
       '<div class="small">From ' + esc(a.submittedBy || '—') + (a.reach ? ' · ' + esc(a.reach) : '') +
         (a.submitted ? ' · ' + esc(a.submitted) : '') + '</div>' +
@@ -286,6 +287,7 @@
       '<div class="row3">' + field('runFrom', 'Start running', a.runFrom, 'date') +
         field('runThrough', 'Stop after', a.runThrough, 'date') + '</div>' +
       field('contact', 'Printed contact', a.contact, 'text', ' maxlength="120"') +
+      field('link', 'Link (opens when the announcement is tapped)', a.link, 'text', ' maxlength="500" inputmode="url" placeholder="https://"') +
       field('notes', 'Private notes', a.notes, 'text', ' maxlength="500"') +
       '<div class="actions"><button class="btn primary" type="submit"' + (state.busy ? ' disabled' : '') + '>Save</button>' +
       '<button class="btn" type="button" data-act="cancel">Cancel</button></div></form>';
@@ -349,7 +351,7 @@
   document.addEventListener('submit', function (e) {
     e.preventDefault();
     var f = e.target, ch = {};
-    ['title', 'order', 'details', 'eventDate', 'startTime', 'endTime', 'runFrom', 'runThrough', 'contact', 'notes'].forEach(function (k) {
+    ['title', 'order', 'details', 'eventDate', 'startTime', 'endTime', 'runFrom', 'runThrough', 'contact', 'link', 'notes'].forEach(function (k) {
       ch[k] = f.elements[k].value.trim();
     });
     if (!ch.title) { state.error = 'The title cannot be empty.'; return render(); }

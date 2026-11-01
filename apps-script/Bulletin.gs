@@ -20,9 +20,9 @@ var BULLETIN = {
 
 var ANNOUNCEMENT_HEADERS = ['Submitted', 'Status', 'Order', 'Title', 'Details', 'Event Date',
   'Run From', 'Run Through', 'Public Contact', 'Submitted By', 'Submitter Contact', 'Manager Notes', 'ID', 'Source',
-  'Start Time', 'End Time'];
+  'Start Time', 'End Time', 'Link'];
 // Bump when SETTING_DEFAULTS or the tab layout changes; the web app then upgrades the tabs itself.
-var SETUP_VERSION = 8;
+var SETUP_VERSION = 9;
 var ANNOUNCEMENT_STATUSES = ['Pending', 'Approved', 'Rejected', 'Archived'];
 
 // Admin page field -> sheet column, with the longest text allowed.
@@ -30,7 +30,7 @@ var ADMIN_FIELDS = {
   status: ['Status'], order: ['Order'], title: ['Title', 120], details: ['Details', 3000],
   eventDate: ['Event Date'], startTime: ['Start Time'], endTime: ['End Time'],
   runFrom: ['Run From'], runThrough: ['Run Through'],
-  contact: ['Public Contact', 120], notes: ['Manager Notes', 500],
+  contact: ['Public Contact', 120], link: ['Link', 500], notes: ['Manager Notes', 500],
 };
 
 // Values an upgrade may overwrite because they were earlier defaults, not choices.
@@ -145,7 +145,7 @@ function setupTabs_(ss) {
   ['Start Time', 'End Time'].forEach(function (h) {
     if (h in times) ann.getRange(2, times[h] + 1, rows, 1).setNumberFormat('@');
   });
-  [140, 95, 55, 220, 380, 115, 115, 115, 160, 140, 160, 200, 80, 120, 80, 80].forEach(function (w, i) {
+  [140, 95, 55, 220, 380, 115, 115, 115, 160, 140, 160, 200, 80, 120, 80, 80, 220].forEach(function (w, i) {
     ann.setColumnWidth(i + 1, w);
   });
   var status = ann.getRange(2, 2, rows, 1);
@@ -352,12 +352,14 @@ function submitAnnouncement(f) {
     runFrom: date(f.runFrom),
     runThrough: date(f.runThrough),
     contact: text(f.publicContact, 120),
+    link: cleanLink(f.link),
     name: text(f.name, 100),
     reach: text(f.reach, 120),
   };
   if (!a.title || !a.details || !a.name || !a.reach) {
     throw new Error('Please fill in the title, details, your name, and how to reach you.');
   }
+  if (a.link === null) throw new Error('The link does not look like a web address. Please check it, or leave it blank.');
   if (!a.eventDate) { a.startTime = ''; a.endTime = ''; } // times only mean something with a date
   if (a.endTime && !a.startTime) throw new Error('Please add a start time, or leave both times blank.');
   if (a.startTime && a.endTime && a.endTime < a.startTime) throw new Error('The end time must be after the start time.');
@@ -385,6 +387,7 @@ function submitAnnouncement(f) {
     put('Run From', a.runFrom);
     put('Run Through', a.runThrough);
     put('Public Contact', noFormula_(a.contact));
+    put('Link', a.link);
     put('Submitted By', noFormula_(a.name));
     put('Submitter Contact', noFormula_(a.reach));
     put('ID', newId_());
@@ -472,6 +475,7 @@ function rowToAnnouncement_(r, col, tz) {
     runFrom: toYmd_(get('Run From'), tz),
     runThrough: toYmd_(get('Run Through'), tz),
     contact: String(get('Public Contact')),
+    link: String(get('Link')),
     submittedBy: String(get('Submitted By')),
     reach: String(get('Submitter Contact')),
     notes: String(get('Manager Notes')),
@@ -646,6 +650,11 @@ function cleanAdminValue_(field, v, max) {
     return v;
   }
   if (field === 'title' && !v) throw new Error('The title cannot be empty.');
+  if (field === 'link') {
+    var link = cleanLink(v);
+    if (link === null) throw new Error('The link does not look like a web address.');
+    return link;
+  }
   return noFormula_(v.slice(0, max || 500));
 }
 

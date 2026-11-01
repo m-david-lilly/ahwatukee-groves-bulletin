@@ -58,6 +58,9 @@
   .ann p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
   .ann .contact { color: var(--muted); font-size: .88rem; margin-top: 4px; }
   .ann a, footer a.plain { color: var(--accent); }
+  .ann h3 a.title { color: inherit; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+  .ann a.more { display: inline-block; margin-top: 6px; font-weight: 600; font-size: .92rem; text-decoration: none;
+    border: 1.5px solid var(--accent); border-radius: 999px; padding: 6px 14px; }
   .empty { color: var(--muted); font-style: italic; padding: 8px 0 16px; }
   .wrap > .empty { text-align: center; padding-top: 30vh; }
   footer { text-align: center; margin-top: 24px; color: var(--muted); font-size: .9rem; }
@@ -134,10 +137,13 @@
     h.push('<section class="card" aria-labelledby="n"><h2 id="n">Announcements</h2>');
     if (!d.announcements.length) h.push('<div class="empty">No announcements this week.</div>');
     d.announcements.forEach(function (n) {
-      h.push('<article class="ann"><h3>' + esc(n.title) + '</h3>' +
+      // With a link, the title opens it, and a "More info" button says so.
+      var title = n.link ? '<a class="title" href="' + esc(n.link) + '" target="_blank" rel="noopener">' + esc(n.title) + '</a>' : esc(n.title);
+      h.push('<article class="ann"><h3>' + title + '</h3>' +
         (n.when ? '<div class="date">' + esc(n.when) + '</div>' : '') +
         (n.details ? '<p>' + linkify(n.details) + '</p>' : '') +
-        (n.contact ? '<div class="contact">Contact: ' + esc(n.contact) + '</div>' : '') + '</article>');
+        (n.contact ? '<div class="contact">Contact: ' + esc(n.contact) + '</div>' : '') +
+        (n.link ? '<a class="more" href="' + esc(n.link) + '" target="_blank" rel="noopener">More info ›</a>' : '') + '</article>');
     });
     h.push('</section></div>');
 

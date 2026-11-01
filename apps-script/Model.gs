@@ -203,6 +203,7 @@ function selectAnnouncements(rows, sundayYmd) {
       details: String(a.details == null ? '' : a.details).trim(),
       when: a.eventDate ? formatYmd(a.eventDate, 'long') + (timeRange(a.startTime, a.endTime) ? ' · ' + timeRange(a.startTime, a.endTime) : '') : '',
       contact: cleanValue(a.contact),
+      link: cleanLink(a.link) || '',
     };
   });
 }
@@ -211,6 +212,19 @@ function selectAnnouncements(rows, sundayYmd) {
 function sortTime_(t) {
   var m = String(t == null ? '' : t).match(/^(\d{1,2}):(\d{2})/);
   return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : '';
+}
+
+/**
+ * A web link for an announcement: "signupgenius.com/x" -> "https://signupgenius.com/x".
+ * Returns '' for blank, and null if it isn't a web address (so the caller can complain).
+ */
+function cleanLink(v) {
+  var s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s; // no scheme typed
+  // http(s) only, no spaces, and a host with a dot ("calendar.app.google", "forms.gle").
+  if (!/^https?:[/][/][^\s/?#]+\.[^\s/?#]+([/?#]\S*)?$/i.test(s)) return null;
+  return s.slice(0, 500);
 }
 
 function ymdParts_(ymd) {

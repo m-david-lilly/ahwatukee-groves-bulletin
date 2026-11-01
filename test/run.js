@@ -12,7 +12,7 @@ for (const f of ['HymnLinks.gs', 'Model.gs']) {
   vm.runInContext(fs.readFileSync(path.join(root, 'apps-script', f), 'utf8'), ctx);
 }
 const { buildAgenda, selectAnnouncements, parseHymn, formatYmd, nextSundayYmd, scheduleLine, defaultRunThrough,
-  wardFeedEvents, eventAnnouncementDetails, clockTime, timeRange, eventTimes } = ctx;
+  wardFeedEvents, eventAnnouncementDetails, clockTime, timeRange, eventTimes, cleanLink } = ctx;
 
 // "Current Week" tab as it looked on 2026-10-07 (a Fast Sunday).
 const fastRows = [
@@ -150,6 +150,17 @@ const sameDay = selectAnnouncements([
   { status: 'Approved', title: 'All day', details: 'x', eventDate: '2026-10-25' },
 ], '2026-10-18');
 assert.strictEqual(sameDay.map((a) => a.title).join(' | '), 'All day | Early | Morning | Afternoon');
+// Announcement links: scheme added when missing, junk rejected (null), blank stays blank.
+assert.strictEqual(cleanLink(''), '');
+assert.strictEqual(cleanLink('  '), '');
+assert.strictEqual(cleanLink('signupgenius.com/go/abc'), 'https://signupgenius.com/go/abc');
+assert.strictEqual(cleanLink('https://calendar.app.google/aobKk7RSEvJgYADX7'), 'https://calendar.app.google/aobKk7RSEvJgYADX7');
+assert.strictEqual(cleanLink('http://forms.gle/x?y=1#z'), 'http://forms.gle/x?y=1#z');
+[ 'javascript:alert(1)', 'mailto:a@b.com', 'call Sister Jones', 'localhost', 'https://no-dot', 'https://a b.com' ].forEach((v) =>
+  assert.strictEqual(cleanLink(v), null, v));
+const linked = selectAnnouncements([{ status: 'Approved', title: 'Dinner', details: 'x', link: 'perfectpotluck.com/abc' },
+  { status: 'Approved', title: 'Bad', details: 'x', link: 'javascript:alert(1)' }], '2026-10-11');
+assert.deepStrictEqual(linked.map((a) => a.title + ' ' + a.link), ['Bad ', 'Dinner https://perfectpotluck.com/abc']);
 assert.throws(() => wardFeedEvents({}, '2026-10-08'), /no unit data/);
 if (process.env.WARD_FEED) { // optional smoke test against a saved copy of the real feed
   const real = wardFeedEvents(JSON.parse(fs.readFileSync(process.env.WARD_FEED, 'utf8')), '2026-10-08');
@@ -168,13 +179,14 @@ const snap = {
   listenApp: { name: 'ListenWiFi', ios: 'https://apps.apple.com/us/app/listenwifi/id1391914337',
     android: 'https://play.google.com/store/apps/details?id=com.listentech.ListenEverywhere' },
 };
+snap.announcements = picked.map((a, i) => (i === 0 ? { ...a, link: 'https://example.org/signup' } : a)); // shows a linked announcement
 const out = path.join(root, 'preview');
 fs.mkdirSync(out, { recursive: true });
 // Each preview is a real docs/ page with window.MOCK_API standing in for the Apps Script backend.
 const adminItems = ann.map((a, i) => ({ id: 'id' + i, notes: '', submittedBy: 'Sister Example', reach: 'example@mail.com',
   submitted: 'Tue Oct ' + (1 + i) + ', 3:1' + i + ' PM', submittedMs: i, ...a, order: a.order === '' ? '' : a.order,
   live: ctx.isAnnouncementActive(a, '2026-10-11') }));
-adminItems[2].title = 'Primary Halloween Party'; adminItems[2].details = 'Costumes welcome! Friday 6 PM in the cultural hall.';
+adminItems[2].title = 'Primary Halloween Party'; adminItems[2].link = 'https://example.org/signup'; adminItems[2].details = 'Costumes welcome! Friday 6 PM in the cultural hall.';
 
 function mockServer(bulletin, items, wardEvents) {
   const later = (v, ms) => new Promise((res) => setTimeout(() => res(JSON.parse(JSON.stringify(v))), ms));
