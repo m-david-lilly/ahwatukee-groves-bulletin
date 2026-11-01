@@ -369,7 +369,7 @@ const LEADERS = [
   ['rs', 'Relief Society president', 'Sister Ana P.', 'Ministering, meals, and help in hard times', ['I could use some help', 'Ministering', 'Something else'], 'Our neighbor just had a baby. Could the sisters help with a few meals?'],
 ];
 const BUILDINGS = [
-  ['Stake Center', '1050 W Grove Pkwy, Tempe, AZ 85283', 'Stake conference, youth activities, the family names clinic', true],
+  ['Stake Center', '1050 W Grove Pkwy, Tempe, AZ 85283', 'Stake conference, youth activities, the family names clinic', true, 'https://maps.app.goo.gl/NDSFBXbYdJXjuHp76'],
   ['Knox Building', '4525 E Knox Rd, Phoenix, AZ 85044', '', false],
   ['Frye Building', '2955 E Frye Rd, Phoenix, AZ 85048', '', false],
 ];
@@ -795,7 +795,7 @@ const S = {
       <p class="muted" style="text-align:center;font-size:12px">Leaders' phone numbers and emails are never shown. In an emergency, call 911.</p>`, 'more'];
   },
   buildings() {
-    const rows = BUILDINGS.map(([n, a, use, sc]) => `<a class="far" href="${mapUrl(a)}" target="_blank" rel="noopener" aria-label="${esc(n)}${sc ? ' (stake center)' : ''}, ${esc(a)}. Open in Google Maps"><div class="txt"><b>${esc(n)}</b>${sc ? '<span class="first">Stake center</span>' : ''}<div class="muted">${esc(a)}</div>${use ? `<div class="muted" style="font-size:12px">${esc(use)}</div>` : ''}</div><span class="sendn">Map ›</span></a>`).join('');
+    const rows = BUILDINGS.map(([n, a, use, sc, u]) => `<a class="far" href="${u || mapUrl(a)}" target="_blank" rel="noopener" aria-label="${esc(n)}${sc ? ' (stake center)' : ''}, ${esc(a)}. Open in Google Maps"><div class="txt"><b>${esc(n)}</b>${sc ? '<span class="first">Stake center</span>' : ''}<div class="muted">${esc(a)}</div>${use ? `<div class="muted" style="font-size:12px">${esc(use)}</div>` : ''}</div><span class="sendn">Map ›</span></a>`).join('');
     return ['Stake buildings', 'Tempe Arizona West Stake', `
       <div class="card list">${rows}</div>
       <p class="muted" style="text-align:center;font-size:12px">Tap a building to open it in Google Maps for directions.</p>`, 'more'];
