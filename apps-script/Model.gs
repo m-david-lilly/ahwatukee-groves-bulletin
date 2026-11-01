@@ -25,6 +25,22 @@ function isBlankValue(v) {
   return BULLETIN_BLANK_VALUES.indexOf(cleanValue(v).toLowerCase()) !== -1;
 }
 
+/**
+ * False for prayer entries that are placeholders rather than a person: blank, "TBD", "TBA",
+ * "?", "(TRW)", "Pending", "To be assigned", a short all-caps code, and the like.
+ */
+function looksLikeName_(v) {
+  var s = cleanValue(v);
+  if (isBlankValue(s) || !/[A-Za-z]/.test(s)) return false;
+  if (/^[(\[].*[)\]]$/.test(s)) return false; // "(TRW)", "[ask Bro. X]"
+  var t = s.toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  var compact = t.replace(/ /g, ''); // "T.B.D." -> "tbd"
+  if (/^(tbd|tba|tbc|tbt|pending|unassigned|open|needed|need|none|unknown|ask|someone|volunteer|byinvitation)$/.test(compact) ||
+      /^to be (determined|announced|assigned|confirmed)/.test(t)) return false;
+  if (/^[A-Z]{2,4}\.?$/.test(s)) return false; // "TBD", "TRW": codes, not names
+  return true;
+}
+
 /** "286. Oh, What Songs of the Heart" -> {number:'286', title:'Oh, What Songs of the Heart'} */
 function parseHymn(v, hymnTitles) {
   var m = cleanValue(v).match(/^#?\s*(\d{1,4})\s*[.:)\-–—]?\s*(.*)$/);
@@ -125,10 +141,8 @@ function buildAgenda(rows, opts) {
     }
 
     var isPrayer = /invocation|benediction|prayer/.test(L);
-    if (isBlankValue(value)) {
-      if (!isPrayer) continue;
-      value = 'By Invitation';
-    }
+    if (isPrayer && !looksLikeName_(value)) value = 'By Invitation';
+    if (isBlankValue(value)) continue;
     items.push({ type: 'person', label: label, value: value });
     if (/invocation|opening prayer/.test(L)) {
       items.push({ type: 'section', text: 'Ward & Stake Business' });

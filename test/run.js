@@ -52,6 +52,12 @@ assert.strictEqual(fast.items.find((i) => i.label === 'Closing Hymn').url,
 const prayers = buildAgenda([['Invocation', ''], ['Opening Hymn', '2. The Spirit of God'], ['Benediction', 'N/A'], ['Speaker 2', '']]);
 assert.strictEqual(prayers.items.filter((i) => i.type === 'person').map((i) => i.label + ': ' + i.value).join(' | '),
   'Invocation: By Invitation | Benediction: By Invitation');
+// Placeholders that aren't a person's name also become "By Invitation"; real names are kept.
+const prayerOf = (v) => buildAgenda([['Benediction', v]]).items[0].value;
+['TBD', 'tbd', 'TBA', 'T.B.D.', '?', '??', '(TRW)', 'TRW', 'Pending', 'To be assigned', 'to be determined', '-'].forEach((v) =>
+  assert.strictEqual(prayerOf(v), 'By Invitation', v));
+['Josh Horton', 'Lila Harp', 'Bo Ingram', 'Kayla Sorensen Finch', 'Sister Mason', 'Al'].forEach((v) =>
+  assert.strictEqual(prayerOf(v), v, v));
 
 const reg = buildAgenda(regularRows, { hymnTitles: { 169: 'As Now We Take the Sacrament' } });
 assert.strictEqual(reg.isFastSunday, false);
