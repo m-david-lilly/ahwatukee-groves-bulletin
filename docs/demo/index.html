@@ -760,6 +760,8 @@ const S = {
       <div class="muted" style="margin:6px 0">${esc(p.details)}</div>
       ${p.img ? `<div class="fprev" style="margin:8px 0"><img src="${p.img}" alt="Flyer for ${esc(p.title)}"><div class="muted" style="font-size:12px">Check the flyer: the date and place match, it's easy to read, and any photos of youth have a parent's permission.</div></div>` : ''}
       <div class="muted" style="font-size:12px">From ${SUBMIT_ORGS.find(o => o[0] === p.org)[1]} · sent just now · will show on ${p.show.filter(x => x !== 'text alert').join(', ')}</div>
+      ${p.org !== 'youth' ? `<div class="muted" style="font-size:12px;margin-top:4px"><i>In the real portal this goes to the ${ORG[p.org]} leaders. Shown here for the demo.</i></div>` : ''}
+      <label class="check" style="margin-top:10px"><input type="checkbox" data-f="major-${p.id}" ${val('major-' + p.id, true) ? 'checked' : ''}><span>Major event: show it in the rotating banner on Home and the bulletin</span></label>
       ${(() => {
         if (!p.show.includes('text alert')) return '<div class="muted" style="font-size:12.5px;margin-top:8px"><b>No text or email goes out</b> with this announcement.</div>';
         const t = st.texting, x = textPlan(p);
@@ -767,11 +769,13 @@ const S = {
           <div style="font-weight:600;font-size:13.5px">To ${t.people} people · ${x.parts === 1 ? '1 text each' : x.parts + ' texts each (long message)'} · about $${x.cost.toFixed(2)}</div>
           <div class="sms">${esc(x.msg)}</div>
           <div class="muted" style="font-size:12.5px;margin-top:6px">${x.over ? `<b style="color:var(--terra)">Over the monthly budget</b> ($${t.spent.toFixed(2)} of $${t.budget} used), so it would go by email instead.` : `Texting this month: $${t.spent.toFixed(2)} now, $${x.after.toFixed(2)} of $${t.budget} after this. This would be text alert ${t.sent + 1} this month.`}</div>
-          <label class="check" style="margin:8px 0 0"><input type="checkbox" data-f="txt-${p.id}" ${val('txt-' + p.id, true) ? 'checked' : ''}><span>${x.over ? 'Send it by email instead.' : 'Send the text alert.'} Untick to approve the announcement without ${x.over ? 'an email' : 'a text'}.</span></label></div>`;
+          <label class="check" style="margin:8px 0 0"><input type="checkbox" data-act="txtToggle" data-v="${p.id}" ${val('txt-' + p.id, true) ? 'checked' : ''}><span>${x.over ? 'Send it by email instead.' : 'Send the text alert.'} Untick to approve the announcement without ${x.over ? 'an email' : 'a text'}.</span></label></div>`;
       })()}
-      ${p.org !== 'youth' ? `<div class="muted" style="font-size:12px;margin-top:4px"><i>In the real portal this goes to the ${ORG[p.org]} leaders. Shown here for the demo.</i></div>` : ''}
-      <label class="check" style="margin-top:10px"><input type="checkbox" data-f="major-${p.id}" ${val('major-' + p.id, true) ? 'checked' : ''}><span>Major event: show it in the rotating banner on Home and the bulletin</span></label>
-      <div class="btns" style="margin-top:12px"><button class="btn green" data-act="approveIt" data-v="${p.id}">Approve</button><button class="btn ghost" data-act="sendBack" data-v="${p.id}">Send back</button></div></div>`).join('');
+      <div class="btns" style="margin-top:12px"><button class="btn green" data-act="approveIt" data-v="${p.id}">${(() => {
+        if (!p.show.includes('text alert') || !val('txt-' + p.id, true)) return 'Approve';
+        const x = textPlan(p);
+        return x.over ? `Approve and email ${st.texting.people} people` : `Approve and send ${st.texting.people} texts ($${x.cost.toFixed(2)})`;
+      })()}</button><button class="btn ghost" data-act="sendBack" data-v="${p.id}">Send back</button></div></div>`).join('');
     const done = st.decided.map(p => `<div class="card"><span class="tag ${p.ok ? 't-ok' : 't-pend'}">${p.ok ? 'Approved' : 'Sent back'}</span><h3 style="margin-top:6px">${esc(p.title)}</h3>
       <div class="muted">${p.ok ? `Now showing on ${p.show.join(', ')}.` : 'The sender was asked to make changes.'}</div>
       ${p.ok ? `<div class="btns" style="margin-top:10px"><button class="btn ghost" data-act="seeCal" data-v="${p.d}">See it on the calendar</button><button class="btn ghost" data-go="board">Bulletin board</button></div>` : ''}</div>`).join('');
@@ -1114,6 +1118,7 @@ const A = {
   apRemind() { st.sheet = null; toast('Reminder sent: "Your appointment Sunday at the church." No reason is ever included.'); },
   apCancel(v) { delete st.appt.bookings[v]; st.sheet = null; toast('Cancelled. They were told by text.'); },
   apAdd() { toast('Tap any open time below to book someone.'); },
+  txtToggle(v, el) { st.f['txt-' + v] = el.checked; },
   hourDay(v, el) {
     const h = st.appt.hours.b, d = Number(v);
     if (el.checked) { h[d] = d === 0 ? [780, 900] : [1140, 1260]; return toast(`${DOWL[d]}s added. Set the times next to it.`); }
