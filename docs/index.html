@@ -66,6 +66,12 @@
   .foot { font-style: italic; margin: 10px 0; }
   footer .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 6px; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
+  .listen { margin: 4px 0 12px; padding: 14px; border-radius: 12px; background: var(--chip); text-align: center; }
+  .listen h3 { font: 600 1rem var(--sans); margin: 0 0 2px; }
+  .listen p { margin: 0 0 10px; font-size: .92rem; color: var(--muted); }
+  .listen .stores { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; }
+  .listen .stores img { display: block; height: 44px; width: auto; }
+  .listen .stores a.play img { height: 64px; margin: -10px -9px; } /* Google's badge has built-in padding */
 </style>
 </head>
 <body>
@@ -111,7 +117,19 @@
       return '<li><div class="txt"><span class="lbl">' + esc(it.label) + '</span><span class="val">' +
         esc(val) + '</span></div>' +
         (it.type === 'hymn' ? hymnChip(it) : '') + '</li>';
-    }).join('') + '</ol></section>');
+    }).join('') + '</ol>');
+    var app = d.listenApp || {};
+    if (app.ios || app.android) {
+      // Official store badges, loaded from Apple and Google.
+      h.push('<div class="listen"><h3>Listen on your phone</h3><p>Hear the meeting through your own headphones with the free ' +
+        esc(app.name || 'listening') + ' app.</p><div class="stores">' +
+        (app.ios ? '<a href="' + esc(app.ios) + '" target="_blank" rel="noopener"><img alt="Download on the App Store" ' +
+          'src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83"></a>' : '') +
+        (app.android ? '<a class="play" href="' + esc(app.android) + '" target="_blank" rel="noopener"><img alt="Get it on Google Play" ' +
+          'src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"></a>' : '') +
+        '</div></div>');
+    }
+    h.push('</section>');
 
     h.push('<section class="card" aria-labelledby="n"><h2 id="n">Announcements</h2>');
     if (!d.announcements.length) h.push('<div class="empty">No announcements this week.</div>');

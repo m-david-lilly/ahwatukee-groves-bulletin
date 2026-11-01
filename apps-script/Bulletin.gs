@@ -22,7 +22,7 @@ var ANNOUNCEMENT_HEADERS = ['Submitted', 'Status', 'Order', 'Title', 'Details', 
   'Run From', 'Run Through', 'Public Contact', 'Submitted By', 'Submitter Contact', 'Manager Notes', 'ID', 'Source',
   'Start Time', 'End Time'];
 // Bump when SETTING_DEFAULTS or the tab layout changes; the web app then upgrades the tabs itself.
-var SETUP_VERSION = 7;
+var SETUP_VERSION = 8;
 var ANNOUNCEMENT_STATUSES = ['Pending', 'Approved', 'Rejected', 'Archived'];
 
 // Admin page field -> sheet column, with the longest text allowed.
@@ -47,6 +47,9 @@ var SETTING_DEFAULTS = [
   ['Ward Activities Feed', 'https://cdn.yextapis.com/v2/accounts/2970756/content/getUnitEventDetails?api_key=ac142022779c885e6473eee98a14b9c1&v=20250101&id=chq-unit-187305', 'Unofficial feed behind the activity list on the ward website; used by the Ward website tab on the admin page. Blank = turn the tab off'],
   ['Ward Website', 'https://local.churchofjesuschrist.org/en/units/us/az/ahwatukee-groves-ward', 'Linked from both bulletins (blank = leave off)'],
   ['Missionary Meals Link', '', 'Sign-up page for feeding the missionaries, linked from both bulletins (blank = leave off). Use a short link if it is long; it is printed as text'],
+  ['Listening App Name', 'ListenWiFi', 'App that carries the building sound system to phones and headphones; shown on the web bulletin'],
+  ['Listening App iPhone Link', 'https://apps.apple.com/us/app/listenwifi/id1391914337', 'App Store link (blank = no App Store button)'],
+  ['Listening App Android Link', 'https://play.google.com/store/apps/details?id=com.listentech.ListenEverywhere', 'Google Play link (blank = no Google Play button)'],
   ['Location', '', 'Building name or address (optional)'],
   ['Presiding', '', 'Optional. Leave blank to leave the Presiding line off'],
   ['Notify Email', '', 'Gets an email for each new submission. Blank = no email'],
@@ -431,6 +434,8 @@ function buildSnapshot_(ss, settings) {
     classesTime: String(settings['Classes Time'] || ''),
     wardWebsite: String(settings['Ward Website'] || ''),
     missionaryMeals: String(settings['Missionary Meals Link'] || ''),
+    listenApp: { name: String(settings['Listening App Name'] || ''), ios: String(settings['Listening App iPhone Link'] || ''),
+      android: String(settings['Listening App Android Link'] || '') },
     location: String(settings['Location'] || ''),
     footer: String(settings['Footer'] || ''),
     deadline: String(settings['Submission Deadline'] || ''),

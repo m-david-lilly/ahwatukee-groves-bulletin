@@ -165,6 +165,8 @@ const snap = {
   deadline: 'Thursday at 5:00 PM', sundayYmd: '2026-10-11', dateLabel: formatYmd('2026-10-11', 'full'),
   agenda: fast, announcements: picked, publishedAt: 'Sat Oct 10 at 6:02 PM', submitUrl: 'submit.html',
   wardWebsite: 'https://example.org/ward', missionaryMeals: 'https://example.org/meals',
+  listenApp: { name: 'ListenWiFi', ios: 'https://apps.apple.com/us/app/listenwifi/id1391914337',
+    android: 'https://play.google.com/store/apps/details?id=com.listentech.ListenEverywhere' },
 };
 const out = path.join(root, 'preview');
 fs.mkdirSync(out, { recursive: true });
