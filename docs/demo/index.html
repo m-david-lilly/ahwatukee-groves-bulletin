@@ -1140,7 +1140,7 @@ const A = {
         if (!c) return '<div class="muted" style="font-size:13px">No contact given.</div>';
         return `<div class="card" style="margin:0 0 10px"><div class="lbl">How to reach ${esc(r.name)}</div><div style="font-weight:700;font-size:15px;margin:2px 0 8px">${esc(c)}</div>
           <div class="btns">${mail ? `<a class="btn ghost" style="text-decoration:none;text-align:center" href="mailto:${esc(c)}">Email</a>` : `<a class="btn ghost" style="text-decoration:none;text-align:center" href="tel:${tel}">Call</a><a class="btn ghost" style="text-decoration:none;text-align:center" href="sms:${tel}">Text</a>`}</div>
-          <div class="muted" style="font-size:12px;margin-top:6px">Shown only to the executive secretary and the bishopric, and deleted with the request once it's booked.</div></div>`;
+          <div class="muted" style="font-size:12px;margin-top:6px">Shown only to the executive secretary and the bishopric. Kept only for the confirmation and reminder, then deleted after the appointment.</div></div>`;
       })()}
       ${r.youth ? '<div class="card note" style="font-size:13px">Youth meeting: the parent is invited, and it confirms once a parent or another adult will be there.</div>' : ''}
       <div class="chips">${Object.entries(PEOPLE).map(([k, n]) => `<button class="chip" aria-pressed="${who === k}" data-act="apReqWho" data-v="${r.id}|${k}">${n}</button>`).join('')}</div>
