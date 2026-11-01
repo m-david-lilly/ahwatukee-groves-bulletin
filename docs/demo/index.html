@@ -521,7 +521,7 @@ function fresh() {
       { by: 'Maria R.', when: 'Tue', text: 'Isaiah 53:4 stood out this week: “Surely he hath borne our griefs.” I read it three times.' },
       { by: 'James T.', when: 'Wed', text: "Question for Sunday: how do you follow Isaiah's poetry? I get lost in the imagery.", reply: ['Ana L.', 'Wed', 'The chapter headings help me a lot, and so does reading it out loud.'] },
     ],
-    myPosts: [], notes: 0, alerts: null, linkSent: false,
+    myPosts: [], notes: 0, farAdded: [], alerts: null, linkSent: false,
     appt: {
       who: 'b', day: '2026-11-08',
       hours: { b: { 0: [780, 900], 2: [1140, 1260] }, c1: { 0: [780, 900], 3: [1140, 1260] }, c2: { 2: [1140, 1260] } }, blockDay: '2026-11-08',
@@ -857,10 +857,14 @@ const S = {
   },
   far() {
     const far = (n, w) => `<div class="far"><div class="txt"><b>${n}</b><div class="muted">${w}</div></div><button class="sendn" data-act="note" data-v="${esc(n)}">Send a note</button></div>`;
+    // people a member added for their own family: waiting for the ward mission leader, and only the member who added them sees them
+    const mine = sec => st.farAdded.map((f, i) => [f, i]).filter(([f]) => f.sec === sec).map(([f, i]) => `<div class="far"><div class="txt"><b>${esc(f.name)}</b> <span class="tag t-pend">Waiting for approval</span><div class="muted">${esc(f.where)}</div>
+      <div class="muted" style="font-size:12px">Added by you. Notes come to you to pass along.</div></div><button class="sendn" data-act="farRemove" data-v="${i}">Remove</button></div>`).join('');
     return ['Far From Home', 'Missionaries and others we love', `
-      <div class="grouphd">Full-time missionaries</div><div class="card list">${far('Elder Tyler B.', 'Brazil São Paulo North Mission')}${far('Sister Hannah L.', 'Japan Tokyo Mission')}${far('Elder & Sister Reyes', 'Senior missionaries · Philippines Cebu Mission')}</div>
-      <div class="grouphd">Service missionaries</div><div class="card list">${far('Josh P.', 'Family history center, Mesa')}</div>
-      <div class="grouphd">Military and students</div><div class="card list">${far('Daniel R.', 'U.S. Navy')}${far('Emma W.', 'Student · Rexburg, Idaho')}</div>
+      <div class="grouphd">Full-time missionaries</div><div class="card list">${far('Elder Tyler B.', 'Brazil São Paulo North Mission')}${far('Sister Hannah L.', 'Japan Tokyo Mission')}${far('Elder & Sister Reyes', 'Senior missionaries · Philippines Cebu Mission')}${mine('mission')}</div>
+      <div class="grouphd">Service missionaries</div><div class="card list">${far('Josh P.', 'Family history center, Mesa')}${mine('service')}</div>
+      <div class="grouphd">Military and students</div><div class="card list">${far('Daniel R.', 'U.S. Navy')}${far('Emma W.', 'Student · Rexburg, Idaho')}${mine('away')}</div>
+      <button class="btn ghost" data-act="farAdd">Add someone from your family</button>
       ${st.notes ? `<div class="card good" style="font-size:13.5px;font-weight:600">${st.notes} note${st.notes > 1 ? 's' : ''} sent this visit. The ward clerk passes them along.</div>` : ''}
       <p class="muted" style="text-align:center;font-size:12px">Listed with each person's OK. Notes are passed along; addresses are never shown.</p>`, 'more'];
   },
@@ -1071,6 +1075,26 @@ const A = {
     st.msgs++; st.sheet = null; ['mtopic', 'mtext', 'myouth', 'mparent'].forEach(k => delete st.f[k]);
     toast(`Sent to the ${L[1].replace('Building', 'building')}.${youth ? ' Your parent is copied.' : ''}`);
   },
+  farAdd() {
+    ['fname', 'fwhere', 'fok'].forEach(k => delete st.f[k]);
+    sheet(`<h3>Add someone from your family</h3><p class="muted">For example, a son or daughter away at college. Their records may have moved to a student ward; that's fine. You are their contact here: notes for them come to you, and you pass them on. Their own phone and email are never asked for.</p>
+      <div class="f"><label for="f-fname">Their name</label>${inp('fname', 'First name and last initial', 'Sam L.')}</div>
+      <div class="f"><label for="f-fsec">They are</label><select class="in" id="f-fsec" data-f="fsec">${[['away', 'At college, in the military, or living away'], ['mission', 'A full-time or senior missionary'], ['service', 'A service missionary']].map(([k, n]) => `<option value="${k}" ${val('fsec', 'away') === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+      <div class="f"><label for="f-fwhere">Where</label>${inp('fwhere', 'School, mission, or city', 'Student · Provo, Utah')}</div>
+      <div class="f"><label for="f-fby">Your name</label>${inp('fby', 'Your name', 'Karen L.')}</div>
+      <div class="f"><label for="f-fcontact">Your phone or email, for their notes</label>${inp('fcontact', 'Phone or email', '(480) 555-0188')}</div>
+      <label class="check"><input type="checkbox" data-f="fok"><span>They've said it's OK to be listed. <span class="muted">They or you can remove it any time.</span></span></label>
+      <div class="btns"><button class="btn ghost" data-act="close">Cancel</button><button class="btn" data-act="farAddOk">Send to the ward mission leader</button></div>`);
+  },
+  farAddOk() {
+    const name = String(val('fname', 'Sam L.')).trim(), where = String(val('fwhere', 'Student · Provo, Utah')).trim();
+    if (!name || !where) { toast('Add their name and where they are.'); return 'skip'; }
+    if (!String(val('fby', 'Karen L.')).trim() || !String(val('fcontact', '(480) 555-0188')).trim()) { toast('Add your name and how to reach you.'); return 'skip'; }
+    if (!val('fok')) { toast("Check with them first: people are listed only with their OK."); return 'skip'; }
+    st.farAdded.push({ name, where, sec: val('fsec', 'away') }); st.sheet = null;
+    toast('Sent to the ward mission leader. You will hear when it is listed.');
+  },
+  farRemove(v) { st.farAdded.splice(Number(v), 1); toast('Removed.'); },
   noteOk() { st.notes++; st.sheet = null; delete st.f.note; toast('Your note is on its way.'); },
   alerts() {
     if (!val('al-ok', true)) return toast('Check the box to agree to reminders first.');
@@ -1286,7 +1310,7 @@ const FLOWS = [
   ['Post an announcement', 'From a member’s idea to the calendar, with approval', 'member', [['more'], ['submit']], ['As a ward member, tap <b>Use a sample flyer</b> (or add your own image), tick <b>Text alert</b>, and tap <b>Send for approval</b>', 'Switch to <b>Young Women president</b>: the approval card shows the text that will go out, to how many people, and what it costs', 'Leave <b>Major event</b> ticked and tap <b>Approve</b>', 'The meter passes 80%; the event is now in the Home banner, the Calendar (Nov 18) and the Bulletin board']],
   ['Sign up and RSVP', 'Potluck, missionary dinners, tithing declaration', 'member', [['more'], ['signups']], ['Open <b>Harvest Potluck</b> and sign up for a salad', 'Open <b>Feed the Missionaries</b> and take an orange day', 'Book a <b>Tithing Declaration</b> time', 'RSVP to the service project']],
   ['Meet with the bishop', 'Request, booking, and the youth rule', 'member', [['more'], ['appt']], ['As a member, tick the under-18 box and send', 'Switch to <b>Executive secretary</b> and tap an open time', 'Book the request; it waits for a parent', 'Tap the booking and confirm an adult', 'Switch to <b>Bishop</b>: pick his days and set the start and end times for each']],
-  ['Stay connected', 'Reminders, notes to missionaries, discussions', 'member', [['more'], ['far']], ['Send a note to a missionary', 'More › <b>Contact a leader</b>: report a problem to the building coordinator', 'More › <b>Stake buildings</b>: find the stake center and open it in Maps', 'More › <b>Get reminders</b> by text', 'Groups › Sunday School: post a thought for the teacher']],
+  ['Stay connected', 'Reminders, notes to missionaries, discussions', 'member', [['more'], ['far']], ['Send a note to a missionary', 'Tap <b>Add someone from your family</b> to list a child away at college; notes for them come to you', 'More › <b>Contact a leader</b>: report a problem to the building coordinator', 'More › <b>Stake buildings</b>: find the stake center and open it in Maps', 'More › <b>Get reminders</b> by text', 'Groups › Sunday School: post a thought for the teacher']],
 ];
 function renderGuide() {
   document.getElementById('roles').innerHTML = Object.entries(ROLES).map(([k, [n, d]]) => `<button aria-pressed="${st.role === k}" data-role="${k}">${n}<small>${d}</small></button>`).join('');
