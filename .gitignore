@@ -1,2 +1,4 @@
 preview/
 node_modules/
+# Personal contact info (leader phone card): never publish
+private/

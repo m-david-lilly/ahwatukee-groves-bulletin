@@ -2,6 +2,8 @@
  * PrintDoc.gs — builds the printed bulletin as a Google Doc (US Letter, landscape):
  * agenda in the left column, announcements in the right. A PDF copy is saved
  * next to it. The Doc stays editable, so last-minute fixes can be made by hand.
+ * The Doc and PDF hold two identical pages, so one double-sided print gives the front and
+ * back of a sheet that is then cut in half (edit both pages if fixing the Doc by hand).
  */
 
 var PAGE_W = 792;   // 11in in points
@@ -42,14 +44,17 @@ function createPrintBulletin_(snap, settings) {
     }
     shown = lo;
   }
-  var blob = lastDrawn === shown ? cache[shown] : draw(shown);
+  var onePage = lastDrawn === shown ? cache[shown] : draw(shown);
+  // Final version: the same page twice, for printing front and back.
+  renderBulletin_(DocumentApp.openById(id), snap, settings, all.slice(0, shown), all.length - shown, qr, 2);
+  var blob = DriveApp.getFileById(id).getAs('application/pdf');
 
   var pdfName = name + '.pdf';
   var old = folder.getFilesByName(pdfName);
   while (old.hasNext()) old.next().setTrashed(true); // replaced by the fresh copy below
   var pdf = folder.createFile(blob.setName(pdfName));
-  // The PDF is offered on the public bulletin page, so anyone with the link may view/download it.
-  // The editable Doc stays private.
+  // Anyone with the link may view the PDF (it holds only what the public bulletin shows), so
+  // whoever uses the admin page can open it. The editable Doc stays private.
   try {
     pdf.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   } catch (e) {
@@ -61,7 +66,7 @@ function createPrintBulletin_(snap, settings) {
     pdf: pdf.getUrl(),
     pdfDownload: 'https://drive.google.com/uc?export=download&id=' + pdf.getId(),
     printed: shown,
-    pages: pdfPages_(blob),
+    pages: pdfPages_(onePage), // pages in ONE copy: more than 1 means the program alone overflows
   };
 }
 
@@ -87,8 +92,8 @@ function qrBlob_(settings) {
   }
 }
 
-/** Draws the whole bulletin into the (cleared) Doc and saves it. */
-function renderBulletin_(doc, snap, settings, announcements, hiddenCount, qr) {
+/** Draws the whole bulletin into the (cleared) Doc and saves it; copies > 1 repeats it on new pages. */
+function renderBulletin_(doc, snap, settings, announcements, hiddenCount, qr, copies) {
   var font = String(settings['Print Font'] || 'Georgia');
   var size = Number(settings['Print Font Size']) || 11;
   var body = doc.getBody();
@@ -114,6 +119,11 @@ function renderBulletin_(doc, snap, settings, announcements, hiddenCount, qr) {
   writeAgenda_(left, snap, S, colW - GUTTER / 2);
   writeAnnouncements_(right, snap, settings, S, announcements, hiddenCount, qr);
 
+  for (var c = 1; c < (copies || 1); c++) {
+    S(body.appendParagraph(''), { size: 1 }).appendPageBreak();
+    S(body.appendParagraph(''), { size: 1 }); // matches the blank line above page 1's table, so both pages line up
+    body.appendTable(layout.copy());
+  }
   S(body.appendParagraph(''), { size: 1 }); // Docs requires a paragraph after a table
   doc.saveAndClose();
 }
