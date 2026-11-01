@@ -915,7 +915,7 @@ const S = {
   },
   appts() {
     const a = st.appt;
-    const reqs = a.requests.map(r => `<div class="who"><span>${esc(r.name)}${r.youth ? '<span class="yt">Youth</span>' : ''}</span><span class="muted">${esc(r.times)}</span></div>`).join('');
+    const reqs = a.requests.map(r => `<button class="slot free" style="margin-bottom:6px" data-act="apReq" data-v="${r.id}"><span>${esc(r.name)}${r.youth ? '<span class="yt">Youth</span>' : ''} <span class="muted" style="font-weight:400">· ${esc(r.times)}</span></span><span>Schedule ›</span></button>`).join('');
     const pchips = Object.entries(PEOPLE).map(([k, n]) => `<button class="chip" aria-pressed="${a.who === k}" data-act="apWho" data-v="${k}">${n}</button>`).join('');
     const h = a.hours[a.who], days = APPT_WEEK.filter(d => h[dt(d).getDay()]);
     if (days.length && !days.includes(a.day)) a.day = days[0];
@@ -1123,8 +1123,27 @@ const A = {
       <label class="check"><input type="checkbox" data-f="otherYouth" ${val('otherYouth', true) ? 'checked' : ''}><span>Youth or child meeting (a parent is invited, and an adult must be confirmed)</span></label>
       <div class="btns"><button class="btn ghost" data-act="close">Cancel</button><button class="btn" data-act="apBook" data-v="${v}|other">Book</button></div>`);
   },
+  // schedule one request: pick who, then any open time in the coming week; days they asked for come first
+  apReq(v) {
+    const a = st.appt, r = a.requests.find(x => x.id === v); if (!r) return;
+    const who = a.reqWho || 'b', h = a.hours[who];
+    const asked = d => r.times.toLowerCase().includes(DOW[dt(d).getDay()].toLowerCase());
+    const days = APPT_WEEK.filter(d => h[dt(d).getDay()]).sort((x, y) => asked(y) - asked(x) || x.localeCompare(y));
+    const rows = days.map(d => {
+      const open = slotsOf(h[dt(d).getDay()]).filter(t => !a.bookings[`${who}|${d}|${t}`] && !a.blocked[who]?.[`${d}|${t}`]);
+      return `<div style="margin:10px 0 4px;font-weight:700;font-size:13.5px">${dlabel(d)} ${asked(d) ? '<span class="tag t-ok">They asked for this day</span>' : ''}</div>
+        <div class="chips" style="margin:0">${open.map(t => `<button class="chip" data-act="apBook" data-v="${who}|${d}|${t}|${r.id}">${t}</button>`).join('') || '<span class="muted" style="font-size:12.5px">Full</span>'}</div>`;
+    }).join('');
+    sheet(`<h3>Schedule ${esc(r.name)}${r.youth ? '<span class="yt">Youth</span>' : ''}</h3><p class="muted">Asked for: ${esc(r.times)}. Pick who they'll meet with, then tap a time.</p>
+      ${r.youth ? '<div class="card note" style="font-size:13px">Youth meeting: the parent is invited, and it confirms once a parent or another adult will be there.</div>' : ''}
+      <div class="chips">${Object.entries(PEOPLE).map(([k, n]) => `<button class="chip" aria-pressed="${who === k}" data-act="apReqWho" data-v="${r.id}|${k}">${n}</button>`).join('')}</div>
+      ${rows || `<div class="empty">The ${PEOPLE[who].toLowerCase()} has no hours set.</div>`}
+      <div class="btns" style="margin-top:14px"><button class="btn ghost" data-act="close">Cancel</button></div>`);
+  },
+  apReqWho(v) { const [rid, k] = v.split('|'); st.appt.reqWho = k; A.apReq(rid); },
   apBook(v) {
     const parts = v.split('|'), rid = parts.pop(), key = parts.join('|'), a = st.appt;
+    a.who = parts[0]; a.day = parts[1];
     let b;
     if (rid === 'other') { const n = val('other', 'Nguyen family').trim(); if (!n) return toast('Add a name first.'); b = val('otherYouth', true) ? { name: n, kind: 'Youth', parent: false } : { name: n }; delete st.f.other; }
     else { const r = a.requests.find(x => x.id === rid); a.requests = a.requests.filter(x => x.id !== rid); b = r.youth ? { name: r.name, kind: 'Youth', parent: false } : { name: r.name }; }
@@ -1309,7 +1328,7 @@ const FLOWS = [
   ['Sunday morning', 'A member finds the program and their class', 'member', [['home']], ['The banner at the top rotates the big events every 6 seconds; try the arrows or Pause', 'Tap <b>Open the program</b>, or the Sunday tab', 'Tap <b>Where do I go?</b>', 'Pick an age group and tap a class to see its room', 'Tap <b>EN ▾</b> on Home and pick <b>Español</b>, then <b>Diné bizaad</b> for a Navajo sample']],
   ['Post an announcement', 'From a member’s idea to the calendar, with approval', 'member', [['more'], ['submit']], ['As a ward member, tap <b>Use a sample flyer</b> (or add your own image), tick <b>Text alert</b>, and tap <b>Send for approval</b>', 'Switch to <b>Young Women president</b>: the approval card shows the text that will go out, to how many people, and what it costs', 'Leave <b>Major event</b> ticked and tap <b>Approve</b>', 'The meter passes 80%; the event is now in the Home banner, the Calendar (Nov 18) and the Bulletin board']],
   ['Sign up and RSVP', 'Potluck, missionary dinners, tithing declaration', 'member', [['more'], ['signups']], ['Open <b>Harvest Potluck</b> and sign up for a salad', 'Open <b>Feed the Missionaries</b> and take an orange day', 'Book a <b>Tithing Declaration</b> time', 'RSVP to the service project']],
-  ['Meet with the bishop', 'Request, booking, and the youth rule', 'member', [['more'], ['appt']], ['As a member, tick the under-18 box and send', 'Switch to <b>Executive secretary</b> and tap an open time', 'Book the request; it waits for a parent', 'Tap the booking and confirm an adult', 'Switch to <b>Bishop</b>: pick his days and set the start and end times for each']],
+  ['Meet with the bishop', 'Request, booking, and the youth rule', 'member', [['more'], ['appt']], ['As a member, tick the under-18 box and send', 'Switch to <b>Executive secretary</b>, tap the new request, and pick who and a time', 'Book the request; it waits for a parent', 'Tap the booking and confirm an adult', 'Switch to <b>Bishop</b>: pick his days and set the start and end times for each']],
   ['Stay connected', 'Reminders, notes to missionaries, discussions', 'member', [['more'], ['far']], ['Send a note to a missionary', 'Tap <b>Add someone from your family</b> to list a child away at college; notes for them come to you', 'More › <b>Contact a leader</b>: report a problem to the building coordinator', 'More › <b>Stake buildings</b>: find the stake center and open it in Maps', 'More › <b>Get reminders</b> by text', 'Groups › Sunday School: post a thought for the teacher']],
 ];
 function renderGuide() {
