@@ -199,7 +199,8 @@ function showLinks() {
 
 function publishBulletin() {
   var r = publish_(true);
-  showDialog_('Bulletin published for ' + r.snap.dateLabel, [
+  showDialog_('Bulletin published for ' + r.snap.dateLabel +
+    (r.imported.length ? ' (added from the ward website: ' + r.imported.join('; ') + ')' : ''), [
     ['Electronic bulletin', r.web],
     ['Printable Google Doc (edit before printing if needed)', r.doc],
     ['PDF', r.pdf],
@@ -221,6 +222,7 @@ function publish_(toWeb) {
     var ss = ss_();
     PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
     var settings = readSettings_(ss);
+    var imported = toWeb ? importUpcomingWardEvents_(ss, settings) : [];
     var snap = buildSnapshot_(ss, settings);
     var files;
     try {
@@ -233,7 +235,7 @@ function publish_(toWeb) {
       }
       if (toWeb) savePublished_(ss, snap);
     }
-    return { snap: snap, doc: files.doc, pdf: files.pdf, web: siteUrl_(settings) };
+    return { snap: snap, doc: files.doc, pdf: files.pdf, web: siteUrl_(settings), imported: imported };
   } finally {
     lock.releaseLock();
   }
@@ -262,7 +264,8 @@ function autoPublishBulletin() {
     MailApp.sendEmail(to, 'Bulletin published for ' + r.snap.dateLabel,
       'The bulletin was published automatically.\n\n' +
       'Electronic: ' + r.web + '\nPrintable Doc: ' + r.doc + '\nPDF: ' + r.pdf + '\n\n' +
-      r.snap.announcements.length + ' announcement(s) online, ' + r.snap.printed + ' fit on the printed page.');
+      r.snap.announcements.length + ' announcement(s) online, ' + r.snap.printed + ' fit on the printed page.' +
+      (r.imported.length ? '\n\nAdded from the ward website: ' + r.imported.join('; ') : ''));
   }
 }
 
@@ -662,7 +665,7 @@ function adminPublish(key) {
   requireAdmin_(key);
   var r = publish_(true);
   return { dateLabel: r.snap.dateLabel, count: r.snap.announcements.length, printed: r.snap.printed,
-    pages: r.snap.pages, web: r.web, doc: r.doc, pdf: r.pdf, publishedAt: r.snap.publishedAt };
+    pages: r.snap.pages, web: r.web, doc: r.doc, pdf: r.pdf, publishedAt: r.snap.publishedAt, imported: r.imported };
 }
 
 /* ------------------------------------------------ ward website activities */
@@ -712,34 +715,67 @@ function adminImportEvent(key, id) {
   lock.waitLock(20000);
   try {
     var sh = announcementsSheet_(ss);
-    var col = ensureIds_(sh);
-    if (!('Source' in col)) {
-      sh.getRange(1, sh.getLastColumn() + 1).setValue('Source').setFontWeight('bold');
-      col = headerIndex_(sh);
-    }
-    var row = new Array(sh.getLastColumn()).fill('');
-    function put(h, v) { if (h in col) row[col[h]] = v; }
-    var newId = newId_();
-    put('Submitted', new Date());
-    put('Status', 'Pending');
-    put('Title', noFormula_(ev.name));
-    put('Details', noFormula_(eventAnnouncementDetails(ev)));
-    put('Event Date', ev.start.slice(0, 10));
-    put('Start Time', eventTimes(ev).start);
-    put('End Time', eventTimes(ev).end);
-    put('Run From', nextSundayYmd(todayYmd_(ss)));
-    put('Submitted By', ev.source + ' website');
-    put('Manager Notes', ev.url ? 'From ' + ev.url : 'From the ward website');
-    put('ID', newId);
-    put('Source', ev.id);
-    sh.appendRow(row);
-    var r = sh.getRange(sh.getLastRow(), 1, 1, sh.getLastColumn()).getValues()[0];
-    var a = rowToAnnouncement_(r, col, ss.getSpreadsheetTimeZone());
+    var row = addWardEventRow_(ss, sh, ev, 'Pending');
+    var col = headerIndex_(sh);
+    var a = rowToAnnouncement_(sh.getRange(row, 1, 1, sh.getLastColumn()).getValues()[0], col, ss.getSpreadsheetTimeZone());
     a.live = isAnnouncementActive(a, currentSunday_(ss));
     return a;
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * On publish: adds ward and stake activities from the ward website that happen in the next
+ * 3 months and aren't in the sheet yet, already Approved. Never blocks publishing: if the
+ * feed is off or broken, it adds nothing. The caller holds the script lock.
+ * Returns the titles added.
+ */
+function importUpcomingWardEvents_(ss, settings) {
+  if (!String(settings['Ward Activities Feed'] || '').trim()) return [];
+  try {
+    var events = wardEvents_(settings);
+    var tz = ss.getSpreadsheetTimeZone();
+    var sh = announcementsSheet_(ss);
+    var col = headerIndex_(sh);
+    var existing = sh.getLastRow() < 2 ? [] :
+      sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).getValues().map(function (r) {
+        return { source: 'Source' in col ? String(r[col['Source']]) : '', title: String(r[col['Title']]),
+          eventDate: toYmd_(r[col['Event Date']], tz) };
+      });
+    var fresh = newWardEvents(events, existing, addMonthsYmd(todayYmd_(ss), 3));
+    fresh.forEach(function (ev) { addWardEventRow_(ss, sh, ev, 'Approved'); });
+    return fresh.map(function (ev) { return ev.name; });
+  } catch (e) {
+    console.warn('Ward website import skipped: ' + e);
+    return [];
+  }
+}
+
+/** Appends one ward website activity as an announcement row; returns its row number. */
+function addWardEventRow_(ss, sh, ev, status) {
+  var col = ensureIds_(sh);
+  if (!('Source' in col)) {
+    sh.getRange(1, sh.getLastColumn() + 1).setValue('Source').setFontWeight('bold');
+    col = headerIndex_(sh);
+  }
+  var row = new Array(sh.getLastColumn()).fill('');
+  function put(h, v) { if (h in col) row[col[h]] = v; }
+  put('Submitted', new Date());
+  put('Status', status);
+  put('Title', noFormula_(ev.name));
+  put('Details', noFormula_(eventAnnouncementDetails(ev)));
+  put('Event Date', ev.start.slice(0, 10));
+  put('Start Time', eventTimes(ev).start);
+  put('End Time', eventTimes(ev).end);
+  put('Run From', nextSundayYmd(todayYmd_(ss)));
+  put('Submitted By', ev.source + ' website');
+  put('Manager Notes', (status === 'Approved' ? 'Added automatically on publish. ' : '') +
+    (ev.url ? 'From ' + ev.url : 'From the ward website'));
+  put('ID', newId_());
+  put('Source', ev.id);
+  sh.appendRow(row);
+  return sh.getLastRow();
 }
 
 function readHymnTitles_(ss) {

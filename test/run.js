@@ -12,7 +12,7 @@ for (const f of ['HymnLinks.gs', 'Model.gs']) {
   vm.runInContext(fs.readFileSync(path.join(root, 'apps-script', f), 'utf8'), ctx);
 }
 const { buildAgenda, selectAnnouncements, parseHymn, formatYmd, nextSundayYmd, scheduleLine, defaultRunThrough,
-  wardFeedEvents, eventAnnouncementDetails, clockTime, timeRange, eventTimes, cleanLink } = ctx;
+  wardFeedEvents, eventAnnouncementDetails, clockTime, timeRange, eventTimes, cleanLink, addMonthsYmd, newWardEvents } = ctx;
 
 // "Current Week" tab as it looked on 2026-10-07 (a Fast Sunday).
 const fastRows = [
@@ -162,6 +162,20 @@ const linked = selectAnnouncements([{ status: 'Approved', title: 'Dinner', detai
   { status: 'Approved', title: 'Bad', details: 'x', link: 'javascript:alert(1)' }], '2026-10-11');
 assert.deepStrictEqual(linked.map((a) => a.title + ' ' + a.link), ['Bad ', 'Dinner https://perfectpotluck.com/abc']);
 assert.throws(() => wardFeedEvents({}, '2026-10-08'), /no unit data/);
+// Publishing pulls in ward-website activities in the next 3 months that aren't in the sheet yet.
+assert.strictEqual(addMonthsYmd('2026-11-01', 3), '2027-02-01');
+assert.strictEqual(addMonthsYmd('2026-11-30', 3), '2027-02-28');
+assert.strictEqual(addMonthsYmd('2027-11-30', 3), '2028-02-29');
+const feedEvs = [
+  { id: 'a', name: 'Ward Temple Night', start: '2026-11-20T18:00' },  // already imported (Source a)
+  { id: 'b', name: 'Youth Music Devotional', start: '2026-11-22T18:30' }, // typed in by hand already
+  { id: 'c', name: 'Ward Christmas Party', start: '2026-12-12T18:00' },  // new, inside 3 months
+  { id: 'd', name: 'Youth Trek', start: '2027-03-08T05:30' },  // beyond 3 months
+  { id: 'e', name: 'Ward Christmas Party', start: '2026-12-12T18:00' },  // same activity listed twice
+];
+const inSheet = [{ source: 'a', title: 'Ward Temple Night', eventDate: '2026-11-20' },
+  { source: '', title: 'Youth  music devotional!', eventDate: '2026-11-22' }];
+assert.deepStrictEqual(newWardEvents(feedEvs, inSheet, addMonthsYmd('2026-11-01', 3)).map((e) => e.id), ['c']);
 if (process.env.WARD_FEED) { // optional smoke test against a saved copy of the real feed
   const real = wardFeedEvents(JSON.parse(fs.readFileSync(process.env.WARD_FEED, 'utf8')), '2026-10-08');
   console.log('real feed: ' + real.length + ' upcoming');

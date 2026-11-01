@@ -266,6 +266,36 @@ function nextSundayYmd(todayYmd) {
   return d.toISOString().slice(0, 10);
 }
 
+/** "2026-11-01" plus 3 months -> "2027-02-01" (clamped to the month's last day: Nov 30 + 3 -> Feb 28). */
+function addMonthsYmd(ymd, months) {
+  var p = ymdParts_(ymd);
+  var target = new Date(Date.UTC(p[0], p[1] - 1 + months, 1));
+  var last = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  target.setUTCDate(Math.min(p[2], last));
+  return target.toISOString().slice(0, 10);
+}
+
+/**
+ * Ward-website activities to add on publish: those starting on or before `untilYmd` that aren't
+ * already in the sheet. `existing` is the sheet's rows ({source, title, eventDate}); an activity
+ * counts as present if its feed id is in Source, or a row has the same title and date (someone
+ * typed it in by hand).
+ */
+function newWardEvents(events, existing, untilYmd) {
+  var ids = {}, keys = {};
+  function key(title, ymd) { return cleanValue(title).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + '|' + ymd; }
+  (existing || []).forEach(function (a) {
+    if (a.source) ids[String(a.source)] = true;
+    if (a.eventDate) keys[key(a.title, a.eventDate)] = true;
+  });
+  return (events || []).filter(function (e) {
+    var ymd = String(e.start).slice(0, 10);
+    if (ymd > untilYmd || ids[e.id] || keys[key(e.name, ymd)]) return false;
+    keys[key(e.name, ymd)] = true; // the feed itself can list one activity twice
+    return true;
+  });
+}
+
 /* ----------------------------------------------------- ward website activities */
 /*
  * The ward's page on local.churchofjesuschrist.org loads its activity list from an
