@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Ward Portal Demo</title>
+<meta name="robots" content="noindex">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -621,6 +622,7 @@ const S = {
     const r = (l, v, n) => `<div class="row"><div class="txt"><div class="lbl">${l}</div>${v}</div>${n ? `<a class="date hymn" style="width:56px" href="${hymnUrl(n)}" target="_blank" rel="noopener" aria-label="Open hymn ${n} in Gospel Library"><b>${n}</b><span>Open ›</span></a>` : ''}</div>`;
     const c = t => `<div class="row"><div class="txt" style="text-align:center;font-style:italic;color:var(--muted)">${t}</div></div>`;
     return ['Sacrament Meeting', 'Sunday, November 1 · 11:10 AM', `${heroHtml()}
+      <div class="card note" style="font-size:12.5px">The names here are made up. Until the stake president says whether a public ward site may show members' names, the real online program shows parts and callings instead; the printed program keeps the names.</div>
       <div class="card"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13.5px">
         <div><div class="lbl">Presiding</div>Bishop Carter</div><div><div class="lbl">Conducting</div>Brother Whitaker</div>
         <div><div class="lbl">Chorister</div>Sister Lopez</div><div><div class="lbl">Organist</div>Sister Roe</div></div></div>
@@ -754,7 +756,8 @@ const S = {
           <div class="muted" style="font-size:12px;margin-top:6px">Shows on the bulletin board and in the banner. Still fill in the title, date and place: screen readers, search, the printed bulletin and text alerts use those. No photos of children or youth without a parent's permission.</div></div>
         <div class="f"><span class="label">Also show on</span>${ck('sBul', 'Printed bulletin', true)}${ck('sCal', 'Ward calendar', true)}${ck('sOrg', "The organization's page", true)}${ck('sTxt', `Text alert to the ${st.texting.people} people who signed up (about $${(st.texting.people * TEXT_COST).toFixed(2)} of the ward's texting budget)`, false)}</div>
         <div class="two f"><div><label for="f-sby">Your name</label>${inp('sby', 'Your name', 'Grace Whitfield')}</div><div><label for="f-scontact">Phone or email</label>${inp('scontact', 'Phone or email', '(480) 555-0177')}</div></div>
-        <div class="muted" style="font-size:12px;margin:-4px 0 10px">Only the approver sees these, in case there is a question. They are deleted when the item ends.</div>
+        ${ck('sminor', "I'm under 18")}<div class="f"><label for="f-sparent">If you're under 18: a parent's or guardian's phone or email</label>${inp('sparent', 'Parent or guardian', '')}</div>
+        <div class="muted" style="font-size:12px;margin:-4px 0 10px">Only the approver sees these, in case there is a question. They are deleted when the item ends. If you're under 18, any question goes to your parent or guardian too.</div>
         <button class="btn" data-act="submit">Send for approval</button></div>`, 'more'];
   },
   approve() {
@@ -762,7 +765,7 @@ const S = {
       <h3 style="margin-top:6px">${esc(p.title)}</h3><div style="color:var(--link);font-weight:600;font-size:13.5px">${dlabel(p.d)} · ${esc(p.from)} to ${esc(p.to)} · ${esc(p.place)}</div>
       <div class="muted" style="margin:6px 0">${esc(p.details)}</div>
       ${p.img ? `<div class="fprev" style="margin:8px 0"><img src="${p.img}" alt="Flyer for ${esc(p.title)}"><div class="muted" style="font-size:12px">Check the flyer: the date and place match, it's easy to read, and any photos of youth have a parent's permission.</div></div>` : ''}
-      <div class="muted" style="font-size:12px">From ${esc(p.by || 'a member')} (${esc(p.contact || 'no contact')}) for ${SUBMIT_ORGS.find(o => o[0] === p.org)[1]} · sent just now · will show on ${p.show.filter(x => x !== 'text alert').join(', ')}</div>
+      <div class="muted" style="font-size:12px">From ${esc(p.by || 'a member')} (${esc(p.contact || 'no contact')})${p.minor ? ` · under 18, so questions also go to the parent or guardian: ${esc(p.parent)}` : ''} for ${SUBMIT_ORGS.find(o => o[0] === p.org)[1]} · sent just now · will show on ${p.show.filter(x => x !== 'text alert').join(', ')}</div>
       ${p.org !== 'youth' ? `<div class="muted" style="font-size:12px;margin-top:4px"><i>In the real portal this goes to the ${ORG[p.org]} leaders. Shown here for the demo.</i></div>` : ''}
       <label class="check" style="margin-top:10px"><input type="checkbox" data-f="major-${p.id}" ${val('major-' + p.id, true) ? 'checked' : ''}><span>Major event: show it in the rotating banner on Home and the bulletin</span></label>
       ${(() => {
@@ -865,6 +868,7 @@ const S = {
     const mine = sec => st.farAdded.map((f, i) => [f, i]).filter(([f]) => f.sec === sec).map(([f, i]) => `<div class="far"><div class="txt"><b>${esc(f.name)}</b> <span class="tag t-pend">Waiting for approval</span><div class="muted">${esc(f.where)}</div>
       <div class="muted" style="font-size:12px">Added by you. The ward mission leader will check with them; then notes come to you to pass along.</div></div><button class="sendn" data-act="farRemove" data-v="${i}">Remove</button></div>`).join('');
     return ['Far From Home', 'Missionaries and others we love', `
+      <div class="card note" style="font-size:12.5px">The names here are made up. Until the stake president says whether a public ward site may show members' names, this page shows only how many are serving, and the names are printed in the bulletin.</div>
       <div class="grouphd">Full-time missionaries</div><div class="card list">${far('Elder Tyler B.', 'Brazil São Paulo North Mission')}${far('Sister Hannah L.', 'Japan Tokyo Mission')}${far('Elder & Sister Reyes', 'Senior missionaries · Philippines Cebu Mission')}${mine('mission')}</div>
       <div class="grouphd">Service missionaries</div><div class="card list">${far('Josh P.', 'Family history center, Mesa')}${mine('service')}</div>
       <div class="grouphd">Military and students</div><div class="card list">${far('Daniel R.', 'U.S. Navy')}${far('Emma W.', 'Student · Idaho')}${mine('away')}</div>
@@ -913,7 +917,7 @@ const S = {
       <div class="lead">Your request goes to the <b>executive secretary</b>, who will call or text you with a time. You don't need to say why.</div>
       <div class="card"><label for="f-aname" class="lbl">Your first and last name</label>${inp('aname', 'First and last name', 'Grace Whitfield')}<div style="height:8px"></div>${inp('acontact', 'Phone or email', '(480) 555-0177')}
         <div class="lbl" style="margin:12px 0 6px">Times that suit you</div><div class="chips">${chips}</div>
-        <label class="check"><input type="checkbox" data-f="ayouth" ${val('ayouth') ? 'checked' : ''}><span>This is for my son or daughter (under 18). <span class="muted">A parent gets every message and is invited. A parent or another adult will be there; your child chooses whether they join or wait outside.</span></span></label>
+        <label class="check"><input type="checkbox" data-f="ayouth" ${val('ayouth') ? 'checked' : ''}><span>This is for a child or youth (under 18). <span class="muted">Messages go to a parent, a guardian or another trusted adult the youth chooses, never to the youth alone. A parent or another adult will be there; the youth chooses whether they join or wait outside.</span></span></label>
         <button class="btn" data-act="appt">Send request</button></div>
       <div class="card"><div class="muted">Rather call? Executive secretary, Brother Roe: (480) 555-0104</div></div>`, 'more'];
   },
@@ -1003,10 +1007,12 @@ const A = {
     if (!title) return toast('Add a title first.');
     const by = String(val('sby', 'Grace Whitfield')).trim(), contact = String(val('scontact', '(480) 555-0177')).trim();
     if (!by || !contact) return toast('Add your name and a phone or email, so the approver can reach you.');
+    const minor = !!val('sminor', false), parent = String(val('sparent', '')).trim();
+    if (minor && !parent) return toast("Add a parent's or guardian's phone or email.");
     if (!/^2026-1[0-2]-\d\d$/.test(d)) return toast('Pick a date in October to December 2026 for the demo.');
     const show = [['sBul', 'bulletin', true], ['sCal', 'calendar', true], ['sOrg', 'organization page', true], ['sTxt', 'text alert', false]].filter(([k, , dd]) => val(k, dd)).map(x => x[1]);
     const org = val('org', 'youth');
-    st.pending.push({ id: 'p' + Date.now(), org, title, details: val('details', 'Youth 11 to 18 and their families. Bring a side dish and a note of thanks for someone in the ward.'), d, from: val('from', '7:00 PM'), to: val('to', '8:30 PM'), place: val('place', 'Cultural hall'), img: st.f.img || null, by, contact, show: show.length ? show : ['bulletin'] });
+    st.pending.push({ id: 'p' + Date.now(), org, title, details: val('details', 'Youth 11 to 18 and their families. Bring a side dish and a note of thanks for someone in the ward.'), d, from: val('from', '7:00 PM'), to: val('to', '8:30 PM'), place: val('place', 'Cultural hall'), img: st.f.img || null, by, contact, minor, parent, show: show.length ? show : ['bulletin'] });
     st.f = { submitted: org };
   },
   submitAgain() { st.f = {}; },
@@ -1150,7 +1156,7 @@ const A = {
       ${(() => {
         const c = r.contact || '', mail = c.includes('@'), tel = c.replace(/[^\d+]/g, '');
         if (!c) return '<div class="muted" style="font-size:13px">No contact given.</div>';
-        return `<div class="card" style="margin:0 0 10px"><div class="lbl">${r.youth ? 'How to reach the parent or guardian' : 'How to reach ' + esc(r.name)}</div><div style="font-weight:700;font-size:15px;margin:2px 0 8px">${esc(c)}</div>
+        return `<div class="card" style="margin:0 0 10px"><div class="lbl">${r.youth ? 'How to reach the parent, guardian or trusted adult' : 'How to reach ' + esc(r.name)}</div><div style="font-weight:700;font-size:15px;margin:2px 0 8px">${esc(c)}</div>
           <div class="btns">${mail ? `<a class="btn ghost" style="text-decoration:none;text-align:center" href="mailto:${esc(c)}">Email</a>` : `<a class="btn ghost" style="text-decoration:none;text-align:center" href="tel:${tel}">Call</a><a class="btn ghost" style="text-decoration:none;text-align:center" href="sms:${tel}">Text</a>`}</div>
           <div class="muted" style="font-size:12px;margin-top:6px">Two people with the same name? The phone or email tells you which one: look it up in Member Tools or LCR.</div>
           <div class="muted" style="font-size:12px;margin-top:6px">Shown only to the executive secretary, the bishop and the counselor they meet. Kept only for the confirmation and reminder, then deleted after the appointment.</div></div>`;
