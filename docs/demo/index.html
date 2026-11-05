@@ -887,7 +887,7 @@ const S = {
         <div class="muted">2nd Sunday: Stake Center · 3rd: Knox Building · 4th: Frye Building</div>
         ${tri ? `<div style="margin-top:6px;font-weight:600">Next: ${dlabel(tri.d)} at the ${esc(tri.place)}</div>` : ''}</div>
       <div class="card list">${rows}</div>
-      <p class="muted" style="text-align:center;font-size:12px">Tap a building to open it in Google Maps for directions.</p>`, 'more'];
+      <p class="muted" style="text-align:center;font-size:12px">Tap a building to open it in Google Maps for directions. Stake buildings and schedules are shown with the stake president's approval.</p>`, 'more'];
   },
   alerts() {
     if (st.alerts) return ['Get Reminders', 'By text or email', `<div class="card good"><h3 style="color:var(--ok)">You're signed up</h3><div style="font-size:13.5px">Reminders for ${esc(st.alerts.join(', '))}. Reply STOP to any text to end them.</div></div>
@@ -1150,7 +1150,7 @@ const A = {
       ${(() => {
         const c = r.contact || '', mail = c.includes('@'), tel = c.replace(/[^\d+]/g, '');
         if (!c) return '<div class="muted" style="font-size:13px">No contact given.</div>';
-        return `<div class="card" style="margin:0 0 10px"><div class="lbl">How to reach ${esc(r.name)}</div><div style="font-weight:700;font-size:15px;margin:2px 0 8px">${esc(c)}</div>
+        return `<div class="card" style="margin:0 0 10px"><div class="lbl">${r.youth ? 'How to reach the parent or guardian' : 'How to reach ' + esc(r.name)}</div><div style="font-weight:700;font-size:15px;margin:2px 0 8px">${esc(c)}</div>
           <div class="btns">${mail ? `<a class="btn ghost" style="text-decoration:none;text-align:center" href="mailto:${esc(c)}">Email</a>` : `<a class="btn ghost" style="text-decoration:none;text-align:center" href="tel:${tel}">Call</a><a class="btn ghost" style="text-decoration:none;text-align:center" href="sms:${tel}">Text</a>`}</div>
           <div class="muted" style="font-size:12px;margin-top:6px">Two people with the same name? The phone or email tells you which one: look it up in Member Tools or LCR.</div>
           <div class="muted" style="font-size:12px;margin-top:6px">Shown only to the executive secretary, the bishop and the counselor they meet. Kept only for the confirmation and reminder, then deleted after the appointment.</div></div>`;
