@@ -716,7 +716,8 @@ const S = {
         ${nav('far', 'Far From Home', 'Missionaries and others we love', '✉', 'rs')}${nav('talk', 'Shared talks', 'From sacrament meeting', '¶', 'ward')}${nav('alerts', 'Get reminders', 'By text or email', '✆', 'primary')}
         ${nav('contact', 'Contact a leader', 'Building coordinator, Elders Quorum, Relief Society', '@', 'rs')}${nav('buildings', 'Stake buildings', 'Addresses, maps, and the stake center', '⌂', 'eq')}</div>
       <div class="grouphd">Leaders</div>${leader}
-      ${signedIn() ? '<button class="btn ghost" data-act="signout">Sign out</button>' : ''}`, 'more'];
+      ${signedIn() ? '<button class="btn ghost" data-act="signout">Sign out</button>' : ''}
+      <p class="muted" style="text-align:center;font-size:12px">A ward resource, not an official or sponsored site of the Church. Questions: the ward clerk, (480) 555-0100.</p>`, 'more'];
   },
   board() {
     const cards = st.flyers.map((f, i) => `<button class="flyer ${f.img ? 'pic' : ''}" style="background:${f.color};transform:rotate(${[-3, 2, 1.5, -2, 2.5, -1.5][i % 6]}deg)" ${f.link ? `data-go="${f.link}"` : `data-act="flyer" data-v="${i}"`} ${f.img ? `aria-label="${esc(f.title)}. ${esc(f.text)}"` : ''}><i class="pin"></i>${f.isNew ? '<span class="new">NEW</span>' : ''}${f.img ? `<img src="${f.img}" alt="">` : `<b>${esc(f.title)}</b><p>${esc(f.text)}</p>`}</button>`).join('');
@@ -752,6 +753,8 @@ const S = {
             : `<div class="btns"><label class="btn ghost" for="f-img">Add a flyer image</label><button class="btn ghost" data-act="sampleImg">Use a sample flyer</button></div><input class="vh" type="file" id="f-img" accept="image/jpeg,image/png,image/webp">`}
           <div class="muted" style="font-size:12px;margin-top:6px">Shows on the bulletin board and in the banner. Still fill in the title, date and place: screen readers, search, the printed bulletin and text alerts use those. No photos of children or youth without a parent's permission.</div></div>
         <div class="f"><span class="label">Also show on</span>${ck('sBul', 'Printed bulletin', true)}${ck('sCal', 'Ward calendar', true)}${ck('sOrg', "The organization's page", true)}${ck('sTxt', `Text alert to the ${st.texting.people} people who signed up (about $${(st.texting.people * TEXT_COST).toFixed(2)} of the ward's texting budget)`, false)}</div>
+        <div class="two f"><div><label for="f-sby">Your name</label>${inp('sby', 'Your name', 'Grace Whitfield')}</div><div><label for="f-scontact">Phone or email</label>${inp('scontact', 'Phone or email', '(480) 555-0177')}</div></div>
+        <div class="muted" style="font-size:12px;margin:-4px 0 10px">Only the approver sees these, in case there is a question. They are deleted when the item ends.</div>
         <button class="btn" data-act="submit">Send for approval</button></div>`, 'more'];
   },
   approve() {
@@ -759,7 +762,7 @@ const S = {
       <h3 style="margin-top:6px">${esc(p.title)}</h3><div style="color:var(--link);font-weight:600;font-size:13.5px">${dlabel(p.d)} · ${esc(p.from)} to ${esc(p.to)} · ${esc(p.place)}</div>
       <div class="muted" style="margin:6px 0">${esc(p.details)}</div>
       ${p.img ? `<div class="fprev" style="margin:8px 0"><img src="${p.img}" alt="Flyer for ${esc(p.title)}"><div class="muted" style="font-size:12px">Check the flyer: the date and place match, it's easy to read, and any photos of youth have a parent's permission.</div></div>` : ''}
-      <div class="muted" style="font-size:12px">From ${SUBMIT_ORGS.find(o => o[0] === p.org)[1]} · sent just now · will show on ${p.show.filter(x => x !== 'text alert').join(', ')}</div>
+      <div class="muted" style="font-size:12px">From ${esc(p.by || 'a member')} (${esc(p.contact || 'no contact')}) for ${SUBMIT_ORGS.find(o => o[0] === p.org)[1]} · sent just now · will show on ${p.show.filter(x => x !== 'text alert').join(', ')}</div>
       ${p.org !== 'youth' ? `<div class="muted" style="font-size:12px;margin-top:4px"><i>In the real portal this goes to the ${ORG[p.org]} leaders. Shown here for the demo.</i></div>` : ''}
       <label class="check" style="margin-top:10px"><input type="checkbox" data-f="major-${p.id}" ${val('major-' + p.id, true) ? 'checked' : ''}><span>Major event: show it in the rotating banner on Home and the bulletin</span></label>
       ${(() => {
@@ -776,9 +779,10 @@ const S = {
         const x = textPlan(p);
         return x.over ? `Approve and email ${st.texting.people} people` : `Approve and send ${st.texting.people} texts ($${x.cost.toFixed(2)})`;
       })()}</button><button class="btn ghost" data-act="sendBack" data-v="${p.id}">Send back</button></div></div>`).join('');
-    const done = st.decided.map(p => `<div class="card"><span class="tag ${p.ok ? 't-ok' : 't-pend'}">${p.ok ? 'Approved' : 'Sent back'}</span><h3 style="margin-top:6px">${esc(p.title)}</h3>
-      <div class="muted">${p.ok ? `Now showing on ${p.show.join(', ')}.` : 'The sender was asked to make changes.'}</div>
-      ${p.ok ? `<div class="btns" style="margin-top:10px"><button class="btn ghost" data-act="seeCal" data-v="${p.d}">See it on the calendar</button><button class="btn ghost" data-go="board">Bulletin board</button></div>` : ''}</div>`).join('');
+    const done = st.decided.map(p => `<div class="card"><span class="tag ${p.ok && !p.cancelled ? 't-ok' : 't-pend'}">${p.cancelled ? 'Cancelled' : p.ok ? 'Approved' : 'Sent back'}</span><h3 style="margin-top:6px">${esc(p.title)}</h3>
+      <div class="muted">${p.cancelled ? 'Marked Cancelled everywhere it shows. A short follow-up went to anyone who got the original.' : p.ok ? `Now showing on ${p.show.join(', ')}.` : 'The sender was asked to make changes.'}</div>
+      ${p.ok ? `<div class="btns" style="margin-top:10px"><button class="btn ghost" data-act="seeCal" data-v="${p.d}">See it on the calendar</button><button class="btn ghost" data-go="board">Bulletin board</button></div>` : ''}
+      ${p.ok && !p.cancelled ? `<button class="btn ghost" style="margin-top:8px;width:100%" data-act="cancelItem" data-v="${p.id}">Cancel this event</button>` : ''}</div>`).join('');
     return ['Needs Your Approval', 'Young Women president', `${textMeter()}${items || '<div class="card"><div class="empty">Nothing is waiting for you.<br>Switch to <b>Ward member</b> and use More › Submit an announcement to send one here.</div></div>'}${done}
       <div class="card info"><b>Every 6 months:</b> <span class="muted">confirm who can post for Young Women. One tap keeps or removes each person.</span></div>`, 'more'];
   },
@@ -859,11 +863,11 @@ const S = {
     const far = (n, w) => `<div class="far"><div class="txt"><b>${n}</b><div class="muted">${w}</div></div><button class="sendn" data-act="note" data-v="${esc(n)}">Send a note</button></div>`;
     // people a member added for their own family: waiting for the ward mission leader, and only the member who added them sees them
     const mine = sec => st.farAdded.map((f, i) => [f, i]).filter(([f]) => f.sec === sec).map(([f, i]) => `<div class="far"><div class="txt"><b>${esc(f.name)}</b> <span class="tag t-pend">Waiting for approval</span><div class="muted">${esc(f.where)}</div>
-      <div class="muted" style="font-size:12px">Added by you. Notes come to you to pass along.</div></div><button class="sendn" data-act="farRemove" data-v="${i}">Remove</button></div>`).join('');
+      <div class="muted" style="font-size:12px">Added by you. The ward mission leader will check with them; then notes come to you to pass along.</div></div><button class="sendn" data-act="farRemove" data-v="${i}">Remove</button></div>`).join('');
     return ['Far From Home', 'Missionaries and others we love', `
       <div class="grouphd">Full-time missionaries</div><div class="card list">${far('Elder Tyler B.', 'Brazil São Paulo North Mission')}${far('Sister Hannah L.', 'Japan Tokyo Mission')}${far('Elder & Sister Reyes', 'Senior missionaries · Philippines Cebu Mission')}${mine('mission')}</div>
       <div class="grouphd">Service missionaries</div><div class="card list">${far('Josh P.', 'Family history center, Mesa')}${mine('service')}</div>
-      <div class="grouphd">Military and students</div><div class="card list">${far('Daniel R.', 'U.S. Navy')}${far('Emma W.', 'Student · Rexburg, Idaho')}${mine('away')}</div>
+      <div class="grouphd">Military and students</div><div class="card list">${far('Daniel R.', 'U.S. Navy')}${far('Emma W.', 'Student · Idaho')}${mine('away')}</div>
       <button class="btn ghost" data-act="farAdd">Add someone from your family</button>
       ${st.notes ? `<div class="card good" style="font-size:13.5px;font-weight:600">${st.notes} note${st.notes > 1 ? 's' : ''} sent this visit. The ward clerk passes them along.</div>` : ''}
       <p class="muted" style="text-align:center;font-size:12px">Listed with each person's OK. Notes are passed along; addresses are never shown.</p>`, 'more'];
@@ -997,10 +1001,12 @@ const A = {
   submit() {
     const f = st.f, title = (val('title', 'Youth Gratitude Dinner')).trim(), d = val('date', '2026-11-18');
     if (!title) return toast('Add a title first.');
+    const by = String(val('sby', 'Grace Whitfield')).trim(), contact = String(val('scontact', '(480) 555-0177')).trim();
+    if (!by || !contact) return toast('Add your name and a phone or email, so the approver can reach you.');
     if (!/^2026-1[0-2]-\d\d$/.test(d)) return toast('Pick a date in October to December 2026 for the demo.');
     const show = [['sBul', 'bulletin', true], ['sCal', 'calendar', true], ['sOrg', 'organization page', true], ['sTxt', 'text alert', false]].filter(([k, , dd]) => val(k, dd)).map(x => x[1]);
     const org = val('org', 'youth');
-    st.pending.push({ id: 'p' + Date.now(), org, title, details: val('details', 'Youth 11 to 18 and their families. Bring a side dish and a note of thanks for someone in the ward.'), d, from: val('from', '7:00 PM'), to: val('to', '8:30 PM'), place: val('place', 'Cultural hall'), img: st.f.img || null, show: show.length ? show : ['bulletin'] });
+    st.pending.push({ id: 'p' + Date.now(), org, title, details: val('details', 'Youth 11 to 18 and their families. Bring a side dish and a note of thanks for someone in the ward.'), d, from: val('from', '7:00 PM'), to: val('to', '8:30 PM'), place: val('place', 'Cultural hall'), img: st.f.img || null, by, contact, show: show.length ? show : ['bulletin'] });
     st.f = { submitted: org };
   },
   submitAgain() { st.f = {}; },
@@ -1021,6 +1027,14 @@ const A = {
       else { t.spent += x.cost; t.sent++; note = ` Text sent to ${t.people} people ($${x.cost.toFixed(2)}).`; if (t.spent / t.budget >= 0.8) note += ' Texting is over 80% of budget.'; }
     }
     toast('Approved.' + (major ? ' It is in the banner.' : '') + note);
+  },
+  // A6: a cancellation is marked, not removed, everywhere the item shows
+  cancelItem(v) {
+    const p = st.decided.find(x => x.id === v); if (!p) return;
+    p.cancelled = true;
+    const e = st.events.find(x => x.id === v); if (e) { e.title = 'Cancelled: ' + e.title; e.major = false; }
+    const f = st.flyers.find(x => x.title === p.title); if (f) f.title = 'Cancelled: ' + f.title;
+    toast('Marked Cancelled on the bulletin, calendar and board. A short follow-up goes to anyone who got the original.');
   },
   sendBack(v) { const p = st.pending.find(x => x.id === v); st.pending = st.pending.filter(x => x.id !== v); p.ok = false; st.decided.unshift(p); toast('Sent back with a note to the sender.'); },
   potluck() {
@@ -1064,30 +1078,28 @@ const A = {
       <div class="f"><label for="f-mtext">Message</label><textarea class="in" id="f-mtext" data-f="mtext">${esc(L[5])}</textarea></div>
       <div class="f"><label for="f-mfrom">Your name</label>${inp('mfrom', 'Your name', 'Ben L.')}</div>
       <div class="f"><label for="f-mreply">How to reply to you</label>${inp('mreply', 'Phone or email', '(480) 555-0144')}</div>
-      <label class="check"><input type="checkbox" data-f="myouth"><span>I'm under 18. <span class="muted">Add a parent below. The parent is copied on the message and every reply.</span></span></label>
-      <div class="f"><label for="f-mparent">Parent's phone or email (if under 18)</label>${inp('mparent', 'Phone or email')}</div>
+      <div class="card note" style="font-size:13px;margin:4px 0 10px">Under 18? Please ask a parent or guardian to send this for you, so a leader never writes to a youth one-on-one.</div>
       <div class="btns"><button class="btn ghost" data-act="close">Cancel</button><button class="btn" data-act="msgOk" data-v="${v}">Send</button></div>`);
   },
   msgOk(v) {
-    const L = LEADERS.find(x => x[0] === v), youth = !!val('myouth');
+    const L = LEADERS.find(x => x[0] === v);
     if (!String(val('mfrom', 'Ben L.')).trim() || !String(val('mreply', '(480) 555-0144')).trim()) { toast('Add your name and how to reply first.'); return 'skip'; }
-    if (youth && !String(val('mparent')).trim()) { toast("Add a parent's phone or email. Leaders never message youth one-on-one."); return 'skip'; }
     st.msgs++; st.sheet = null; ['mtopic', 'mtext', 'myouth', 'mparent'].forEach(k => delete st.f[k]);
-    toast(`Sent to the ${L[1].replace('Building', 'building')}.${youth ? ' Your parent is copied.' : ''}`);
+    toast(`Sent to the ${L[1].replace('Building', 'building')}.`);
   },
   farAdd() {
     ['fname', 'fwhere', 'fok'].forEach(k => delete st.f[k]);
-    sheet(`<h3>Add someone from your family</h3><p class="muted">For example, a son or daughter away at college. Their records may have moved to a student ward; that's fine. You are their contact here: notes for them come to you, and you pass them on. Their own phone and email are never asked for.</p>
+    sheet(`<h3>Add someone from your family</h3><p class="muted">For example, a son or daughter away at college. Their records may have moved to a student ward; that's fine. You are their contact here: notes for them come to you, and you pass them on. Their own phone and email are never asked for. Give only a general location: a mission, a military branch, or a state or country, never a school or city.</p>
       <div class="f"><label for="f-fname">Their name</label>${inp('fname', 'First name and last initial', 'Sam L.')}</div>
       <div class="f"><label for="f-fsec">They are</label><select class="in" id="f-fsec" data-f="fsec">${[['away', 'At college, in the military, or living away'], ['mission', 'A full-time or senior missionary'], ['service', 'A service missionary']].map(([k, n]) => `<option value="${k}" ${val('fsec', 'away') === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
-      <div class="f"><label for="f-fwhere">Where</label>${inp('fwhere', 'School, mission, or city', 'Student · Provo, Utah')}</div>
+      <div class="f"><label for="f-fwhere">Where</label>${inp('fwhere', 'Mission, branch, or state', 'Student · Utah')}</div>
       <div class="f"><label for="f-fby">Your name</label>${inp('fby', 'Your name', 'Karen L.')}</div>
       <div class="f"><label for="f-fcontact">Your phone or email, for their notes</label>${inp('fcontact', 'Phone or email', '(480) 555-0188')}</div>
-      <label class="check"><input type="checkbox" data-f="fok"><span>They've said it's OK to be listed. <span class="muted">They or you can remove it any time.</span></span></label>
+      <label class="check"><input type="checkbox" data-f="fok"><span>They've agreed to be listed and to their notes coming to me. <span class="muted">The ward mission leader will check with them before it shows. They or you can remove it any time.</span></span></label>
       <div class="btns"><button class="btn ghost" data-act="close">Cancel</button><button class="btn" data-act="farAddOk">Send to the ward mission leader</button></div>`);
   },
   farAddOk() {
-    const name = String(val('fname', 'Sam L.')).trim(), where = String(val('fwhere', 'Student · Provo, Utah')).trim();
+    const name = String(val('fname', 'Sam L.')).trim(), where = String(val('fwhere', 'Student · Utah')).trim();
     if (!name || !where) { toast('Add their name and where they are.'); return 'skip'; }
     if (!String(val('fby', 'Karen L.')).trim() || !String(val('fcontact', '(480) 555-0188')).trim()) { toast('Add your name and how to reach you.'); return 'skip'; }
     if (!val('fok')) { toast("Check with them first: people are listed only with their OK."); return 'skip'; }
@@ -1141,7 +1153,7 @@ const A = {
         return `<div class="card" style="margin:0 0 10px"><div class="lbl">How to reach ${esc(r.name)}</div><div style="font-weight:700;font-size:15px;margin:2px 0 8px">${esc(c)}</div>
           <div class="btns">${mail ? `<a class="btn ghost" style="text-decoration:none;text-align:center" href="mailto:${esc(c)}">Email</a>` : `<a class="btn ghost" style="text-decoration:none;text-align:center" href="tel:${tel}">Call</a><a class="btn ghost" style="text-decoration:none;text-align:center" href="sms:${tel}">Text</a>`}</div>
           <div class="muted" style="font-size:12px;margin-top:6px">Two people with the same name? The phone or email tells you which one: look it up in Member Tools or LCR.</div>
-          <div class="muted" style="font-size:12px;margin-top:6px">Shown only to the executive secretary and the bishopric. Kept only for the confirmation and reminder, then deleted after the appointment.</div></div>`;
+          <div class="muted" style="font-size:12px;margin-top:6px">Shown only to the executive secretary, the bishop and the counselor they meet. Kept only for the confirmation and reminder, then deleted after the appointment.</div></div>`;
       })()}
       ${r.youth ? '<div class="card note" style="font-size:13px">Youth meeting: the parent is invited, and it confirms once a parent or another adult will be there.</div>' : ''}
       <div class="chips">${Object.entries(PEOPLE).map(([k, n]) => `<button class="chip" aria-pressed="${who === k}" data-act="apReqWho" data-v="${r.id}|${k}">${n}</button>`).join('')}</div>
